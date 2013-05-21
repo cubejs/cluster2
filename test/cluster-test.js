@@ -576,15 +576,17 @@ function waitForStart(child, emitter, test) {
         deferred.reject(new Error("timeout"));
     }, 3000);
 
-    child.on("message", function(message){
+    var handler = function(message){
         if(message.ready){
             clearTimeout(timeOut);
             deferred.resolve();
+            child.removeListener("message", handler);
         }
         if(message.type === 'heartbeat'){
             emitter.emit('heartbeat', message);
         }
-    });
+    };
+    child.on("message", handler);
 
     deferred.promise.then(function(){
         emitter.emit("started");
@@ -592,7 +594,8 @@ function waitForStart(child, emitter, test) {
     .fail(function(error){
         test.ok(false, error);
         test.done();
-    });
+    })
+    .done();
 }
 
 function waitForStop(emitter, test, current, max) {
