@@ -12,6 +12,10 @@ test:
 	export NODE_PATH=./node_modules;\
 	node_modules/nodeunit/bin/nodeunit test
 
+test-debug: 
+	export NODE_PATH=./node_modules;\
+	node --debug-brk node_modules/nodeunit/bin/nodeunit test
+
 test-part:
 	export NODE_PATH=./node_modules;\
 	node_modules/nodeunit/bin/nodeunit test--reporter dot --output ../../reports
