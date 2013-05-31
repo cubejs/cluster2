@@ -17,7 +17,7 @@
 var Cluster = require('../../lib/index.js'),
     express = require('express');
 
-var server = express.createServer();
+var server = express();
 var serving = true;
 server.get('/', function(req, res) {
     res.send('hello');
