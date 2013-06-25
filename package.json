@@ -25,7 +25,9 @@
         "express": "2.5.11",
         "websocket": "",
         "nodeunit": "",
-        "request": ""
+        "request": "",
+        "mocha": "",
+        "should": ""
     },
     "scripts": {
         "test": "nodeunit test"
