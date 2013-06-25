@@ -10,7 +10,7 @@ install:
 .PHONY : test
 test: 
 	export NODE_PATH=./node_modules;\
-	node_modules/nodeunit/bin/nodeunit test
+	node_modules/nodeunit/bin/nodeunit test/cluster-test.js
 
 test-debug: 
 	export NODE_PATH=./node_modules;\
