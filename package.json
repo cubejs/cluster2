@@ -20,7 +20,8 @@
         "ejs": "~0.8.4",
         "npm": "~1.3.0",
         "q": "~0.9.6",
-        "memwatch": "~0.2.2"
+        "memwatch": "~0.2.2",
+        "getrusage": "~0.3.3"
     },
     "devDependencies": {
         "websocket": "~1.0.8",
