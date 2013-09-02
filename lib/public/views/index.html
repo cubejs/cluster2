@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>cluster2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <!-- Latest compiled and minified CSS -->
+	  <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+  </head>
+  <body>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Active Workers</h3>
+      </div>
+      <div class="panel-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>
+                <div class="dropdown">
+                  <a id="workerDropDown1357" data-toggle="dropdown" href="#">worker: 1357</a><b class="caret"></b>
+                  <ul class="dropdown-menu" role="menu" aria-labelledby="workerDropDown1357">
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug new</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">kill</a></li>
+                  </ul>
+                </div>        
+              </th>
+              <th>
+                <div class="dropdown">
+                  <a id="workerDropDown1359" data-toggle="dropdown" href="#">worker: 1359</a><b class="caret"></b>
+                  <ul class="dropdown-menu" role="menu" aria-labelledby="workerDropDown1359">
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug new</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">kill</a></li>
+                  </ul>
+                </div>
+              </th>
+              <th>
+                <div class="dropdown">
+                  <a id="workerDropDown1361" data-toggle="dropdown" href="#">worker: 1361</a><b class="caret"></b>
+                  <ul class="dropdown-menu" role="menu" aria-labelledby="workerDropDown1361">
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug new</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">kill</a></li>
+                  </ul>
+                </div>
+              </th>
+              <th>
+                <div class="dropdown">
+                  <a id="workerDropDown1363" data-toggle="dropdown" href="#">worker: 1363</a><b class="caret"></b>
+                  <ul class="dropdown-menu" role="menu" aria-labelledby="workerDropDown1363">
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug new</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">kill</a></li>
+                  </ul>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>debugging</td>
+              <td>false</td>
+              <td>false</td>
+              <td>false</td>
+              <td>false</td>
+            </tr>
+            <tr>
+              <td>cpu</td>
+              <td>10%</td>
+              <td>11%</td>
+              <td>9%</td>
+              <td>10%</td>
+            </tr>
+            <tr>
+              <td>memory</td>
+              <td>1024MB</td>
+              <td>896MB</td>
+              <td>975MB</td>
+              <td>1000MB</td>
+            </tr>
+            <tr>
+              <td>connections</td>
+              <td>20</td>
+              <td>18</td>
+              <td>19</td>
+              <td>21</td>
+            </tr>
+            <tr>
+              <td>gc</td>
+              <td>10,5</td>
+              <td>11,6</td>
+              <td>12,7</td>
+              <td>14,6</td>
+            </tr>
+            <tr>
+              <td>tps</td>
+              <td>30</td>
+              <td>28</td>
+              <td>29</td>
+              <td>31</td>
+            </tr>
+            <tr>
+              <td>errors</td>
+              <td>3</td>
+              <td>2</td>
+              <td>3</td>
+              <td>2</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Active Cache</h3>
+      </div>
+      <div class="panel-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>value</th>
+              <th>persisted</th>
+              <th>expire</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>key1</td>
+              <td>value1</td>
+              <td>true</td>
+              <td>null</td>
+            </tr>
+            <tr>
+              <td>key2</td>
+              <td>value2</td>
+              <td>false</td>
+              <td>60000ms</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>
