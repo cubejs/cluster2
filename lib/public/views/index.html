@@ -14,112 +14,15 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
 
+
     <div class="panel panel-default">
       <div class="panel-heading">
         <h3 class="panel-title">Active Workers</h3>
       </div>
-      <div class="panel-body">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>
-                <div class="dropdown">
-                  <a id="workerDropDown1357" data-toggle="dropdown" href="#">worker: 1357</a><b class="caret"></b>
-                  <ul class="dropdown-menu" role="menu" aria-labelledby="workerDropDown1357">
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug new</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">kill</a></li>
-                  </ul>
-                </div>        
-              </th>
-              <th>
-                <div class="dropdown">
-                  <a id="workerDropDown1359" data-toggle="dropdown" href="#">worker: 1359</a><b class="caret"></b>
-                  <ul class="dropdown-menu" role="menu" aria-labelledby="workerDropDown1359">
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug new</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">kill</a></li>
-                  </ul>
-                </div>
-              </th>
-              <th>
-                <div class="dropdown">
-                  <a id="workerDropDown1361" data-toggle="dropdown" href="#">worker: 1361</a><b class="caret"></b>
-                  <ul class="dropdown-menu" role="menu" aria-labelledby="workerDropDown1361">
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug new</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">kill</a></li>
-                  </ul>
-                </div>
-              </th>
-              <th>
-                <div class="dropdown">
-                  <a id="workerDropDown1363" data-toggle="dropdown" href="#">worker: 1363</a><b class="caret"></b>
-                  <ul class="dropdown-menu" role="menu" aria-labelledby="workerDropDown1363">
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">debug new</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">kill</a></li>
-                  </ul>
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>debugging</td>
-              <td>false</td>
-              <td>false</td>
-              <td>false</td>
-              <td>false</td>
-            </tr>
-            <tr>
-              <td>cpu</td>
-              <td>10%</td>
-              <td>11%</td>
-              <td>9%</td>
-              <td>10%</td>
-            </tr>
-            <tr>
-              <td>memory</td>
-              <td>1024MB</td>
-              <td>896MB</td>
-              <td>975MB</td>
-              <td>1000MB</td>
-            </tr>
-            <tr>
-              <td>connections</td>
-              <td>20</td>
-              <td>18</td>
-              <td>19</td>
-              <td>21</td>
-            </tr>
-            <tr>
-              <td>gc</td>
-              <td>10,5</td>
-              <td>11,6</td>
-              <td>12,7</td>
-              <td>14,6</td>
-            </tr>
-            <tr>
-              <td>tps</td>
-              <td>30</td>
-              <td>28</td>
-              <td>29</td>
-              <td>31</td>
-            </tr>
-            <tr>
-              <td>errors</td>
-              <td>3</td>
-              <td>2</td>
-              <td>3</td>
-              <td>2</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="panel-body" id="workers-table">
+        
       </div>
     </div>
-
 
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -152,5 +55,18 @@
         </table>
       </div>
     </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+    
+      var socket = io.connect('http://localhost');
+      //data from master should be in a JSON format or HTML which allows us to replace the workers table completely
+      socket.on('workers', function (data) {
+        if(data.view === 'html'){
+          $('#workers-table').html(data.html);
+        }
+      });
+    </script>
+
   </body>
 </html>
