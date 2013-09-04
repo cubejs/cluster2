@@ -8,10 +8,7 @@ var counter = 0;
 
 promiseOfUsr.then(function(usr){
 
-	//usr.makeCopy();
-
 	for(var i = 0; i < 10000; i += 1){
-
 
 		usr.get('k2', function(){
 				return 'v2';
