@@ -10,14 +10,30 @@ app.get('/', function(req, res){
 	require('../../lib/cache-usr.js').user()
 		.then(function(usr){
 
-			console.log('cache user started');
+			console.log('user resolved');
+			
+			var key = req.query.key,
+				val = req.query.value;
 
-			usr.get('key', function(){
-					return 'value';
-				})
-				.then(function(value){
-					res.send(util.format('hello from:%d whose cached value is:%j', process.pid, value), 200);
-				});
+			if(!key){
+				usr.get('key', function(){
+						return 'value';
+					}, 
+					{
+						'persist': true,
+						'expire': null
+					})
+					.then(function(value){
+						res.send(util.format('hello from:%d whose cached value is:%j', process.pid, value), 200);
+					});
+			}
+			else{
+				console.log('user set:' + key + '=' + val);
+				usr.set(key, val)
+					.then(function(){
+						res.send(util.format('user set:%s to value:%j', key, val), 200);
+					});
+			}
 		});
 });
 
