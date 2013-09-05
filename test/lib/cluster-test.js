@@ -8,11 +8,16 @@ var Cluster = require('../../lib/index.js'),
 app.get('/', function(req, res){
 
 	require('../../lib/cache-usr.js').user()
-		.then(function(user){
+		.then(function(usr){
 
 			console.log('cache user started');
 
-			res.send(util.format('hello from:%d', process.pid), 200);
+			usr.get('key', function(){
+					return 'value';
+				})
+				.then(function(value){
+					res.send(util.format('hello from:%d whose cached value is:%j', process.pid, value), 200);
+				});
 		});
 });
 
