@@ -45,7 +45,7 @@ usr.keys({
   'wait': 100//this is a timeout option
 })
 .then(function(keys){
-//the keys resolved is an array of all cached keys from the cache-manager's view
+//the keys resolved is an array of all cached keys:string[] from the cache-manager's view
 });
 ```
 * **`get`**
@@ -53,7 +53,8 @@ usr.keys({
 ```javascript
 var usr;//assume the usr has been assigned as above
 
-usr.get('cache-key-1', function(){
+usr.get('cache-key-1', //key must be string
+  function(){
     return 'cache-value-loaded-1';
   },
   {
@@ -61,7 +62,7 @@ usr.get('cache-key-1', function(){
     'expire': 10000,//default null, otherwise it means in how many ms the key/value should be expired if not loaded. 
     'wait': 100//this is a timeout option
   })
-  .then(function(value){
+  .then(function(value, persist, expire){
     //the value resolved is anything already cached or the value newly loaded
     //note, the loader will be called once and once only, if it failed, the promise of get will be rejected.
   });
@@ -71,36 +72,40 @@ usr.get('cache-key-1', function(){
 ```javascript
 var usr;//assume the usr has been assigned as above
 
-usr.set('cache-key-1', 'cache-value-loaded-1', {
-  'persist': false,
-  'expire': 10000,
-  'leaveIfNotNull': false,//default false, which allows set to overwrite existing values, use true for the atomic getAndLoad
-  'wait': 100
-})
-.then(function(happens){
-//the happens resolved is a true/false value indicating if the value has been accepted by the cache manager
-});
+usr.set('cache-key-1', //key must be string
+  'cache-value-loaded-1', //value could be any json object
+  {
+    'persist': false,
+    'expire': 10000,
+    'leaveIfNotNull': false,//default false, which allows set to overwrite existing values, use true for the atomic getAndLoad
+    'wait': 100
+  })
+  .then(function(happens){
+  //the happens resolved is a true/false value indicating if the value has been accepted by the cache manager
+  });
 ```
 * **`del`**
 
 ```javascript
 var usr;//assume the usr has been assigned as above
 
-usr.del('cache-key-1', {
-  'wait': 100//this is a timeout option
-})
-.then(function(value){
-//the old value deleted
-});
+usr.del('cache-key-1', //key must be string
+  {
+    'wait': 100//this is a timeout option
+  })
+  .then(function(value){
+  //the old value deleted
+  });
 ```
 * **`watch`**
 
 ```javascript
 var usr;//assume the usr has been assigned as above
 
-usr.watch('cache-key-1', function watching(value){
-  //this is a callback which will be called anytime the associatd key has an updated value
-});
+usr.watch('cache-key-1', //key must be string
+  function watching(value){
+    //this is a callback which will be called anytime the associatd key has an updated value
+  });
 ```
 * **`unwatch`**
 
