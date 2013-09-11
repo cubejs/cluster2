@@ -41,6 +41,7 @@ new Cluster({
 	'noWorkers': 1,
 	'createServer': require('http').createServer,
 	'app': app,
-	'port': 8080
+	'port': 8080,
+	'monPort': 8082
 })
 .listen();

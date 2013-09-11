@@ -13,10 +13,11 @@
     "dependencies": {
         "underscore": "~1.4.4",
         "when": "~2.3.0",
+        "winston": "~0.7.2",
         "express": "~3.1.0",
         "socket.io": "~0.9.16",
         "usage": "~0.3.8",
-        "node-inspector": "~0.2.0beta4",
+        "node-inspector": "~0.2.0-beta4",
         "graceful-fs": "~2.0.0",
         "nodefly-gcinfo": "~0.0.15",
         "ejs": "~0.8.4",
@@ -29,7 +30,8 @@
         "should": "~1.2.2"
     },
     "scripts": {
-        "test": "nodeunit test"
+        "prestart": "rm -rf ./log; mkdir log",
+        "start": "node ./test/lib/cluster-test.js"
     },
     "optionalDependencies": {}
 }
