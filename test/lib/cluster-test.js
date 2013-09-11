@@ -10,8 +10,6 @@ app.get('/', function(req, res){
 	require('../../lib/cache-usr.js').user()
 		.then(function(usr){
 
-			console.log('user resolved');
-			
 			var key = req.query.key,
 				val = req.query.value;
 
@@ -42,6 +40,7 @@ new Cluster({
 	'createServer': require('http').createServer,
 	'app': app,
 	'port': 8080,
-	'monPort': 8082
+	'monPort': 8082,
+	'debugPort': 8083
 })
 .listen();
