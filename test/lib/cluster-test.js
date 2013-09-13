@@ -1,6 +1,6 @@
 'use strict';
 
-var Cluster = require('../../lib/index.js'),
+var Cluster = require('../../lib/index.js').Cluster,
 	util = require('util'),
 	express = require('express'),
 	app = express();
@@ -43,4 +43,15 @@ new Cluster({
 	'monPort': 8082,
 	'debugPort': 8083
 })
-.listen();
+.listen()
+.then(function(resolve){
+
+	var masterOrWorker = resolve.master || resolve.worker;
+
+	masterOrWorker.useCache().then(function(usr){
+
+		usr.set('init', Date.now());
+	});
+
+	masterOrWorker.status.register('worker', process.pid);
+});
