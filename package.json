@@ -12,20 +12,19 @@
     "main": "lib/index.js",
     "dependencies": {
         "underscore": "~1.4.4",
+        "usage": "~0.3.8",
         "when": "~2.3.0",
         "winston": "~0.7.2",
+        "graceful-fs": "~2.0.0",
+        "request": "~2.21.0",
         "express": "~3.1.0",
         "socket.io": "~0.9.16",
-        "usage": "~0.3.8",
-        "node-inspector": "~0.2.0-beta4",
-        "graceful-fs": "~2.0.0",
-        "nodefly-gcinfo": "~0.0.15",
         "ejs": "~0.8.4",
+        "node-inspector": "~0.2.0-beta4",
+        "nodefly-gcinfo": "~0.0.15",
         "bignumber.js": "~1.1.1"
     },
     "devDependencies": {
-        "websocket": "~1.0.8",
-        "request": "~2.21.0",
         "mocha": "~1.11.0",
         "should": "~1.2.2"
     },
