@@ -1,37 +1,36 @@
 {
-    "author": "ql.io",
+    "author": "cubejs",
     "contributors": [{
-        "name": "Subbu Allamaraju",
-        "email": "subbu@ebaysf.com"
+        "name": "Roy Zhou",
+        "email": "huzhou@ebay.com"
     }],
-    "name": "cluster2",
-    "version": "0.4.8",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/ql-io/cluster2"
-    },
+    "name": "cluster3",
+    "version": "0.1.0",
     "engines": {
-        "node": ">= 0.8.0"
+        "node": ">= 0.10.0"
     },
     "main": "lib/index.js",
     "dependencies": {
         "underscore": "~1.4.4",
-        "express": "~2.5.11",
+        "usage": "~0.3.8",
+        "when": "~2.3.0",
+        "winston": "~0.7.2",
+        "graceful-fs": "~2.0.0",
+        "request": "~2.21.0",
+        "express": "~3.1.0",
+        "socket.io": "~0.9.16",
         "ejs": "~0.8.4",
-        "npm": "~1.3.0",
-        "q": "~0.9.6",
-        "memwatch": "~0.2.2",
-        "getrusage": "~0.3.3"
+        "node-inspector": "~0.2.0-beta4",
+        "nodefly-gcinfo": "~0.0.15",
+        "bignumber.js": "~1.1.1"
     },
     "devDependencies": {
-        "websocket": "~1.0.8",
-        "nodeunit": "~0.8.0",
-        "request": "~2.21.0",
         "mocha": "~1.11.0",
         "should": "~1.2.2"
     },
     "scripts": {
-        "test": "nodeunit test"
+        "prestart": "rm -rf ./log; mkdir log",
+        "start": "node ./test/lib/cluster-test.js"
     },
     "optionalDependencies": {}
 }

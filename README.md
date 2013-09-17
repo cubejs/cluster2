@@ -1,258 +1,135 @@
-## What is cluster2
+cubejs-cluster2
+===============
 
-![Travis status](https://secure.travis-ci.org/ql-io/cluster2.png)
+This is a completely overhaul, not expected to be backward compatible, but the features should cover the most popular while some changes are on their way:
 
-NOTE: For node (<=0.6.x), use cluster2 version 0.3.1
+## simplification
 
-cluster2 is a node.js (>= 0.8.x) compatible multi-process management module. This module grew out of
-our needs in operationalizing node.js for [ql.io](https://github.com/ql-io/ql.io) at eBay. Built on
-node's `cluster`, cluster2 adds several safeguards and utility functions to help support real-world
-production scenarios:
+You'll see that we've simplified the api a great deal, the listen method takes no arguments at all, and all dancing parts could be injected through the construation.
+That's based on the adoption of Promise A+ (when.js). 
+You'll also find redundant features like: multiple app/port support, ecv on workers removed, to keep code clean.
 
-* Scriptable start, shutdown and stop flows
-* Worker monitoring for process deaths
-* Worker recycling
-* Graceful shutdown
-* Idle timeouts
-* Validation hooks (for other tools to monitor cluster2 apps)
-* Events for logging cluster activities
-* Exit with error code when the port is busy to fail start scripts
-* Disable monitor
-* and more coming soon
+## debug
 
-## Usage
+Ever imagined debugging to be simpler? Here's the good news, we've carefully designed the debugging process from the ground up of the new cluster.
+With integration with ECV, worker lifecycle management, node-inspector, and bootstrap + websocket debug app (middleware to be exact). You're now
+able to debug any running worker a few clicks away, same applies for a newly forked one.
 
-### Getting cluster2
+## robustness
 
-    npm install cluster2
-    
+This is sth we learned given the real experience of a node.js application, workers do get slower, whether that's memory leak, or GC becomes worse, it's easier to prepare
+than to avoid. So as a step forward from the previous 'death watch', we're now proactively collecting performance statistics and to decide it a worker could be ended 
+before it gets slow.
 
-### Start a TCP Server
+## caching
 
-    var Cluster = require('cluster2'),
-        net = require('net');
-    var server = net.createServer(function (c) {
-        c.on('end', function () {
-            console.log('server disconnected');
-        });
-        c.write('hello\r\n');
-        c.pipe(c);
-    });
+This is as exciting as debugging, it allows workers to share computation results, watch over others, in a fast and reliable manner.
+We tried work delegation to master once, and found it error-prone and difficult to code against, caching makes things so much simpler, using domain socket, so much faster.
+The atomic getOrLoad syntax makes sharing efficient, running cache manager as another worker and persistence support make it disaster recoverable.
+It's like having a memcached process, only this is node, and you can debug it too.
 
-    var c = new Cluster({
-        port: 3000,
-        cluster: true
-    });
-    c.listen(function(cb) {
-        cb(server);
-    });
+* **`user`** 
 
-### Start a HTTP Server
+```javascript
+require('cluster/cache-user').user().then(function(usr){
+//the usr is the major api cluster application could then interact with
+//the usr is the same accross the entire worker process
+});
+```
+* **`keys`**
 
-    var Cluster = require('cluster2'),
-        http = require('http');
-    var server = http.createServer(function (req, res) {
-        res.writeHead(200);
-        res.end('hello');
-    });
-    var c = new Cluster({
-        port: 3000
-    });
-    c.listen(function(cb) {
-        cb(server);
-    });
+```javascript
+var usr;//assume the usr has been assigned as above
 
-### Start an Express Server
+usr.keys({
+  'wait': 100//this is a timeout option
+})
+.then(function(keys){
+//the keys resolved is an array of all cached keys:string[] from the cache-manager's view
+});
+```
+* **`get`**
 
-    var Cluster = require('cluster2'),
-        express = require('express');
-    var app = express.createServer();
-    app.get('/', function(req, res) {
-        res.send('hello');
-    });
+```javascript
+var usr;//assume the usr has been assigned as above
 
-    var c = new Cluster({
-        port: 3000,
-    });
-    c.listen(function(cb) {
-        cb(app);
-    });
+usr.get('cache-key-1', //key must be string
+  function(){
+    return 'cache-value-loaded-1';
+  },
+  {
+    'persist': false,//default false, otherwise the loaded value will be persisted, if not loaded, the persistence info will be returned
+    'expire': 10000,//default null, otherwise it means in how many ms the key/value should be expired if not loaded. 
+    'wait': 100//this is a timeout option
+  })
+  .then(function(value, persist, expire){
+    //the value resolved is anything already cached or the value newly loaded
+    //note, the loader will be called once and once only, if it failed, the promise of get will be rejected.
+  });
+```
+* **`set`**
 
-### Stop a Server
+```javascript
+var usr;//assume the usr has been assigned as above
 
-    var Cluster = require('cluster2');
-    var c = new Cluster();
-    c.stop();
+usr.set('cache-key-1', //key must be string
+  'cache-value-loaded-1', //value could be any json object
+  {
+    'persist': false,
+    'expire': 10000,
+    'leaveIfNotNull': false,//default false, which allows set to overwrite existing values, use true for the atomic getAndLoad
+    'wait': 100
+  })
+  .then(function(happens){
+  //the happens resolved is a true/false value indicating if the value has been accepted by the cache manager
+  });
+```
+* **`del`**
 
-### Gracefully Shutdown a Server
+```javascript
+var usr;//assume the usr has been assigned as above
 
-    var Cluster = require('cluster2');
-    var c = new Cluster();
-    c.shutdown();
+usr.del('cache-key-1', //key must be string
+  {
+    'wait': 100//this is a timeout option
+  })
+  .then(function(value){
+  //the old value deleted
+  });
+```
+* **`watch`**
 
+```javascript
+var usr;//assume the usr has been assigned as above
 
-## Options
+usr.watch('cache-key-1', //key must be string
+  function watching(value){
+    //this is a callback which will be called anytime the associatd key has an updated value
+  });
+```
+* **`unwatch`**
 
-Cluster2 takes the following options.
+```javascript
+var usr;//assume the usr has been assigned as above
 
-* `cluster`: When `true` starts a number of workers. Use `false` to start the server as a single
-   process. Defaults to `true`.
-* `pids`: A directory to write PID files for master and workers.
-* `port`: Port number for the app, defaults to `3000`.
-* `host`: Hostname or IP for the app listening, defaults to `0.0.0.0`.
-* `monHost`: Hostname or IP for the monitor listening, defaults to `0.0.0.0`. 
-* `monPort`: Port number for the monitor URL, defaults to `3001`. Go to `http://<localhost>:3001` to
-   view application logs (whatever is written to a `/logs` dir), and npm dependencies.
-* `ecv`: ECV stands for "extended content verification". This is an object with the following
-   additional properties:
-     * `path`: A path to serve a heart beat. See below.
-     * `monitor`: A URI to check before emitting a valid heart beat signal
-     * `control`: When true, allows clients to enable or disable the signal. See below.
-     validator to validate the runtime health of the app. If found unhealthy, emits a disable
-* `noWorkers`: Defaults to `os.cpus().length`.
-* `timeout`: Idle socket timeout. Automatically ends incoming sockets if found idle for this
-   duration. Defaults to `30` seconds.
-* `connThreshold`: When the number of connections processed exceeds this numbers, recycle the worker
-   process. This can help recover from slow leaks in your code or dependent modules.
+usr.unwatch('cache-key-1', watching);//stop watching
 
-## Graceful Shutdown
+```
+* **`makeCopy`**
 
-The purpose of `shutdown()` is to let the server reject taking new connections, handle all pending
-requests and end the connecton so that no request dropped. In order to handling `shutdown()`, the
-server must handle `close` events as follows.
+```javascript
+var usr;//assume the usr has been assigned as above
 
-    var serving = true;
-    var server = http.createServer(function (req, res) {
-        if(!serving) {
-            // Be nice and send a connection: close as otherwise the client may pump more requests
-            // on the same connection
-            res.writeHead(200, {
-                'connection': 'close'
-            });
-        }
-        res.writeHead(200);
-        res.end('hello');
-    });
-    server.on('close', function() {
-        serving = false;
-    })
-    var c = new Cluster({
-        port: 3000,
-        cluster: true
-    });
+usr.makeCopy();
+//this forces the user to keep copy of cache manager whenever a value is loaded, it also watches any change and update the copy automatically
+//this option is to make the cache more reliable but could cause consistency problem when the cache manager dies
+```
+* **`unmakeCopy`**
 
-Completion of `shutdown()` does not necessarily mean that all worker processes are dead immediately. 
-The workers may take a while to complete processing of current requests and exit. The `shutdown()` 
-flow only guarantees that the server takes no new connections.
+```javascript
+var usr;//assume the usr has been assigned as above
 
-## Cluster2 Events
-
-Cluster2 is an `EventEmitter` and emits the following events.
-
-* `died`: Emitted when a worker dies. This event is also emitted during normal `shutdown()` or
-  `stop()`.
-* `forked`: Emitted when a new worker is forked.
-* `<signal>`: Emitted when a worker receives a signal (such as `SIGKILL`, `SIGTERM` or `SIGINT`).
-
-Here is an example that logs these events to the disk.
-
-    var Cluster = require('cluster2'),
-        http = require('http');
-
-    var server = http.createServer(function (req, res) {
-        res.writeHead(200);
-        res.end('hello');
-    });
-    var c = new Cluster({
-        cluster: true,
-        port: 3000,
-        host: 'localhost'
-    });
-    c.on('died', function(pid) {
-        console.log('Worker ' + pid + ' died');
-    });
-    c.on('forked', function(pid) {
-        console.log('Worker ' + pid + ' forked');
-    });
-    c.on('SIGKILL', function() {
-        console.log('Got SIGKILL');
-    });
-    c.on('SIGTERM', function(event) {
-        console.log('Got SIGTERM - shutting down');
-    });
-    c.on('SIGINT', function() {
-        console.log('Got SIGINT');
-    });
-    c.listen(function(cb) {
-        cb(server);
-    });
-
-## Routing Traffic
-
-It is fairly common for proxies or load balancers deployed in front of node clusters, and those
-proxies to use monitor URLs to detect the health of the cluster. Cluster2 includes a monitor
-at `http://<host>:<port>/ecv`. You can change this by setting the `path` property when initializing
-the cluster.
-
-In case you want to take the node cluster out of rotation from the proxy/load balancer, you can do
-so by setting `control` to `true` when initializing the cluster. At runtime, you can send a `POST`
-request to `http://<host>:<port>/ecv/disable`. Once this is done, further requests to
-`http://<host>:<port>/ecv` will get a network error. You can bring the cluster back to rotation by
-sending a `POST` request to `http://<host>:<port>/ecv/enable`.
-
-Since it will be potentially disastrous to let artibrary clients enable/disable traffic, you should
-configure your proxy/load balancer to prevent external traffic to `/ecv*`.
-
-To test this, bring up an example
-
-    node examples/express/express-server.js
-
-and send a `GET` request to `http://localhost:3000/ecv` and notice the response.
-
-    HTTP/1.1 200 OK
-    X-Powered-By: Cluster2
-    content-type: text/plain
-    since: Fri May 18 2012 09:49:32 GMT-0700 (PDT)
-    cache-control: no-cache
-    Connection: keep-alive
-    Transfer-Encoding: chunked
-
-    status=AVAILABLE&ServeTraffic=true&ip=127.0.0.1&hostname=somehost&port=3000&time=Fri May 18 2012 09:49:49 GMT-0700 (PDT)
-
-To flip the monitor into a disabled state, send a `POST` request to `http://localhost:3000/disable`.
-
-    HTTP/1.1 204 No Content
-    X-Powered-By: Cluster2
-    since: Fri May 18 2012 09:54:25 GMT-0700 (PDT)
-    cache-control: no-cache
-    Connection: close
-
-Subsequent `GET` requests to `http://localhost:3000/ecv` will return a response similar to the one
-below.
-
-    HTTP/1.1 400 Bad Request
-    X-Powered-By: Cluster2
-    content-type: text/plain
-    since: Fri May 18 2012 09:54:25 GMT-0700 (PDT)
-    cache-control: no-cache
-    Connection: close
-    Transfer-Encoding: chunked
-
-    status=DISABLED&ServeTraffic=false&ip=127.0.0.1&hostname=somehost&port=3000&time=Fri May 18 2012 09:55:17 GMT-0700 (PDT)
-
-To flip the monitor back into an enabled state, send a `POST` request to `http://localhost:3000/enable`.
-
-
-NOTE for 0.4.0 version
-The major change is to support a general work delegation pattern between workers & master. In a few scenarios, we've seen duplicate work
-done by each worker, that could be delegated to master to address and avoid the duplication of effort. And to make it general enough, we
-defined the following delegation pattern:
-worker -> master : message
-message.type is "delegate"
-message.delegate defines the actual message type
-message.expect is optional, if not given, the delegate work is silently handled by master (e.g. logging remotely); if given, worker will expect a response message whose
-type must equal message.expect; if given expect, the following will be enabled: message.matches defines the matching criteria of the response message, message.timeout defines
-the max timeout of the delegate work. message.notification allows delegated work to publish changes detected later.
-message.origin keeps the orginal message.
-In cluster2, after master receives the message from worker, it would turn it into an event message, and find the proper listener to handle such.
-The event handler could be config reader, remote logger, resource externalizer e.g. and they might/might not respond to master based on the expect.
+usr.unmakeCopy();
+//the opposite as makeCopy, and the default behavior, no copy is kept locally, all queries go to cache manager
+//which maximizes the consistency, but availability will be hurt when the cache manager is in the middle over recovery
+```
