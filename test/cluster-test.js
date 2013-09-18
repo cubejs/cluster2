@@ -502,7 +502,8 @@ function start(emitter) {
     _.extend(env, process.env);
     _.extend(env, {
         port:port,
-        monPort:monPort
+        monPort:monPort,
+        heartbeatInterval:100
     });
     var start = spawn('node', ['test/lib/server.js'], {
         env: env,

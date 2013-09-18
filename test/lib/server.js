@@ -40,7 +40,7 @@ var c = new Cluster({
     ecv: {
         control: true
     },
-    heartbeatInterval: 1000
+    heartbeatInterval: process.env["heartbeatInterval"] || 1000
 });
 
 c.on('died', function(pid) {
@@ -85,6 +85,7 @@ c.on('SIGINT', function() {
 
 c.on('heartbeat', function(heartbeat){
 
+    console.log('Got HEARTBEAT');
     heartbeat.type = 'heartbeat';
     process.send(heartbeat);
 });
