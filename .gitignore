@@ -9,3 +9,5 @@ reports
 target
 docs
 logs
+cluster-cache-domain
+cluster-cache-persist
