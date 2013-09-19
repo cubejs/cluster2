@@ -41,18 +41,16 @@ new Cluster({
 	'app': app,
 	'port': 9090,
 	'monPort': 9091,
-	'debugPort': 9092,
+	'debug': {
+		'webPort': 9092,
+		'saveLiveEdit': true
+	},
 	'heartbeatInterval': 5000
 })
 .listen()
 .then(function(resolve){
 
 	var masterOrWorker = resolve.master || resolve.worker;
-
-	masterOrWorker.useCache().then(function(usr){
-
-		usr.set('init', Date.now());
-	});
 
 	masterOrWorker.status.register('worker', process.pid);
 });
