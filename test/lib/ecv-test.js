@@ -7,7 +7,7 @@ var should = require('should'),
 	_ = require('underscore'),
 	EventEmitter = require('events').EventEmitter,
 	getLogger = require('../../lib/utils.js').getLogger,
-	rejectIfPortBusy = require('../../lib/utils.js').rejectIfPortBusy;
+	pickAvailablePort = require('../../lib/utils.js').pickAvailablePort;
 
 function knock(port, path, assertions){
 
@@ -45,13 +45,7 @@ describe('ecv', function(){
 			var ecv = require('../../lib/ecv.js'),
 				app = express(),
 				server = http.createServer(app),
-				emitter = new EventEmitter(),
-				positive = function(req, res){
-					res.send('postive', 200);
-				},
-				negative = function(req, res){
-					res.send('negative', 500);
-				};
+				emitter = new EventEmitter();
 
 			ecv.enable(app, {
 				'root': '/ecv',
@@ -62,49 +56,46 @@ describe('ecv', function(){
 				'emitter': emitter
 			});
 
-			when.any(_.map(_.range(8000, 9000), function(port){
-					return rejectIfPortBusy('localhost', port);
-				}))
-				.then(function(port){
+			pickAvailablePort(8000, 9000).then(function(port){
 
-					server.listen(port, function(){
-						//server started;
+				server.listen(port, function(){
+					//server started;
+
+					knock(port, '/ecv', function(error, response, body){
+
+						should.not.exist(error);
+						response.should.be.ok;
+						response.statusCode.should.equal(500);//yet markUp
+					})
+					.then(function(){
+
+						emitter.emit('warning', {'command':'enable'});
 
 						knock(port, '/ecv', function(error, response, body){
-
+							
 							should.not.exist(error);
 							response.should.be.ok;
-							response.statusCode.should.equal(500);//yet markUp
+							response.statusCode.should.equal(200);//should have been marked up
 						})
 						.then(function(){
 
-							emitter.emit('warning', {'command':'enable'});
+							emitter.emit('warning', {'command':'disable'}); 
 
 							knock(port, '/ecv', function(error, response, body){
-								
+
 								should.not.exist(error);
 								response.should.be.ok;
-								response.statusCode.should.equal(200);//should have been marked up
+								response.statusCode.should.equal(500);//marked down again
 							})
-							.then(function(){
+							.then(done, done);//fail due to ecv check incorrect after markdown
 
-								emitter.emit('warning', {'command':'disable'}); 
+						}, done);//fail due to ecv check incorrect after markup
 
-								knock(port, '/ecv', function(error, response, body){
+					}, done);//fail due to initial ecv check failed
 
-									should.not.exist(error);
-									response.should.be.ok;
-									response.statusCode.should.equal(500);//marked down again
-								})
-								.then(done, done);//fail due to ecv check incorrect after markdown
+				});
 
-							}, done);//fail due to ecv check incorrect after markup
-
-						}, done);//fail due to initial ecv check failed
-
-					});
-
-				}, done);//fail due to ports rejected
+			}, done);//fail due to ports rejected
 		});
 
 		it('should support control mode via urls', function(done){
@@ -114,13 +105,7 @@ describe('ecv', function(){
 			var ecv = require('../../lib/ecv.js'),
 				app = express(),
 				server = http.createServer(app),
-				emitter = new EventEmitter(),
-				positive = function(req, res){
-					res.send('postive', 200);
-				},
-				negative = function(req, res){
-					res.send('negative', 500);
-				};
+				emitter = new EventEmitter();
 
 			ecv.enable(app, {
 				'root': '/ecv',
@@ -131,65 +116,115 @@ describe('ecv', function(){
 				'emitter': emitter
 			});
 
-			when.any(_.map(_.range(8000, 9000), function(port){
-					return rejectIfPortBusy('localhost', port);
-				}))
-				.then(function(port){
+			pickAvailablePort(8000, 9000).then(function(port){
 
-					server.listen(port, function(){
-						//server started;
+				server.listen(port, function(){
+					//server started;
+
+					knock(port, '/ecv', function(error, response, body){
+
+						should.not.exist(error);
+						response.should.be.ok;
+						response.statusCode.should.equal(500);//yet markUp
+					})
+					.then(function(){
+
+						var expectMarkUpAlert = when.defer();
+
+						emitter.once('markUp', function(target){
+							expectMarkUpAlert.resolve(target);
+						});
+
+						when.join(knock(port, '/ecv/markUp'), timeout(1000, expectMarkUpAlert.promise)).then(function(){
+
+							knock(port, '/ecv', function(error, response, body){
+								
+								should.not.exist(error);
+								response.should.be.ok;
+								response.statusCode.should.equal(200);//should have been marked up
+							})
+							.then(function(){
+
+								var expectMarkDownAlert = when.defer();
+
+								emitter.once('markDown', function(target){
+									expectMarkDownAlert.resolve(target);
+								});
+
+								when.join(knock(port, '/ecv/markDown'), timeout(1000, expectMarkDownAlert.promise)).then(function(){
+
+									knock(port, '/ecv', function(error, response, body){
+
+										should.not.exist(error);
+										response.should.be.ok;
+										response.statusCode.should.equal(500);//marked down again
+									})
+									.then(done, done); //fail due to incorrect ecv after mark down
+
+								}, done); //fail due to either mark down rejected or mark down status change event not received
+
+							}, done); //fail due to incorrect ecv after mark up
+
+						}, done); //fail due to either mark up rejected or mark up status change event not received
+
+					}, done); //fail due to initial ecv check failed
+
+				});
+
+			}, done); //fail due to all ports rejected
+		});
+
+		it('should support monitor with any validator', function(done){
+
+			this.timeout(3000);
+
+			var ecv = require('../../lib/ecv.js'),
+				app = express(),
+				server = http.createServer(app),
+				emitter = new EventEmitter(),
+				disabled = false;
+
+			pickAvailablePort(8000, 9000).then(function(port){
+
+				ecv.enable(app, {
+					'root': '/ecv',
+					'mode': 'monitor',
+					'monitor': 'http://localhost:' + port + '/',
+					'validator': function(error, response, body){
+						
+						return !error && response.statusCode === 200;
+					},
+					'emitter': emitter
+				});
+
+				app.get('/', function(req, res){
+
+					res.send(disabled ? 500 : 200);
+				});
+
+				server.listen(port, function(){
+
+					knock(port, '/ecv', function(error, response, body){
+
+						should.not.exist(error);
+						response.should.be.ok;
+						response.statusCode.should.equal(200);
+					})
+					.then(function(){
+
+						disabled = true;
 
 						knock(port, '/ecv', function(error, response, body){
 
 							should.not.exist(error);
 							response.should.be.ok;
-							response.statusCode.should.equal(500);//yet markUp
+							response.statusCode.should.equal(500);
 						})
-						.then(function(){
+						.then(done, done);
 
-							var expectMarkUpAlert = when.defer();
-
-							emitter.once('markUp', function(target){
-								expectMarkUpAlert.resolve(target);
-							});
-
-							when.join(knock(port, '/ecv/markUp'), timeout(1000, expectMarkUpAlert.promise)).then(function(){
-
-								knock(port, '/ecv', function(error, response, body){
-									
-									should.not.exist(error);
-									response.should.be.ok;
-									response.statusCode.should.equal(200);//should have been marked up
-								})
-								.then(function(){
-
-									var expectMarkDownAlert = when.defer();
-
-									emitter.once('markDown', function(target){
-										expectMarkDownAlert.resolve(target);
-									});
-
-									when.join(knock(port, '/ecv/markDown'), timeout(1000, expectMarkDownAlert.promise)).then(function(){
-
-										knock(port, '/ecv', function(error, response, body){
-
-											should.not.exist(error);
-											response.should.be.ok;
-											response.statusCode.should.equal(500);//marked down again
-										})
-										.then(done, done); //fail due to incorrect ecv after mark down
-
-									}, done); //fail due to either mark down rejected or mark down status change event not received
-
-								}, done); //fail due to incorrect ecv after mark up
-
-							}, done); //fail due to either mark up rejected or mark up status change event not received
-
-						}, done); //fail due to initial ecv check failed
-
-					});
-
-				}, done); //fail due to all ports rejected
+					}, done);
+				});
+			});
 		});
 	});
 });
