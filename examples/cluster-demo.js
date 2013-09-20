@@ -1,13 +1,13 @@
 'use strict';
 
-var Cluster = require('../../lib/index.js').Cluster,
+var Cluster = require('../lib/index.js').Cluster,
 	util = require('util'),
 	express = require('express'),
 	app = express();
 
 app.get('/', function(req, res){
 
-	require('../../lib/cache-usr.js').user()
+	require('../lib/cache-usr.js').user()
 		.then(function(usr){
 
 			var key = req.query.key,

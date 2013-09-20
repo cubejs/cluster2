@@ -30,7 +30,10 @@
     },
     "scripts": {
         "prestart": "rm -rf ./log; mkdir log",
-        "start": "node ./test/lib/cluster-test.js"
+        "start": "node ./examples/cluster-demo.js",
+        "test": "./node_modules/mocha/bin/mocha ./test/*"
     },
-    "optionalDependencies": {}
+    "optionalDependencies": {
+        
+    }
 }
