@@ -1,3 +1,5 @@
+'use strict';
+
 var should = require('should'),
 	express = require('express'),
 	request = require('request'),

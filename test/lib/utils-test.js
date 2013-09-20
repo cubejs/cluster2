@@ -1,3 +1,5 @@
+'use strict';
+
 var should = require('should'),
 	utils = require('../../lib/utils.js'),
 	path = require('path'),
