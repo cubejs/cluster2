@@ -6,7 +6,7 @@ var should = require('should'),
 	_ = require('underscore'),
 	EventEmitter = require('events').EventEmitter,
 	getLogger = require('../../lib/utils.js').getLogger,
-	exitIfBusyPort = require('../../lib/utils.js').exitIfBusyPort;
+	rejectIfPortBusy = require('../../lib/utils.js').rejectIfPortBusy;
 
 function knock(port, path, assertions){
 
@@ -59,7 +59,7 @@ describe('ecv', function(){
 			});
 
 			when.any(_.map(_.range(8000, 9000), function(port){
-					return exitIfBusyPort('localhost', port);
+					return rejectIfPortBusy('localhost', port);
 				}))
 				.then(function(port){
 
