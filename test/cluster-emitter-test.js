@@ -2,7 +2,7 @@
 
 var should = require('should'),
 	_ = require('underscore'),
-	getLogger = require('../../lib/utils.js').getLogger;
+	getLogger = require('../lib/utils.js').getLogger;
 
 describe('cluster-emitter', function(){
 
@@ -18,7 +18,7 @@ describe('cluster-emitter', function(){
 
 			this.timeout(500);
 
-			var emitter = require('../../lib/cluster-emitter.js').emitter;
+			var emitter = require('../lib/cluster-emitter.js').emitter;
 
 			emitter.should.be.ok;
 			_.isFunction(emitter.emit).should.equal(true);
