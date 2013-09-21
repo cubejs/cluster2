@@ -45,4 +45,14 @@ describe('cluster-emitter', function(){
 
 	});
 
+	//now we'll need to verify the test in cluster mode, for master emitter the behavior should be:
+	//emit is to send the event to both master & all workers (we'll prepare a couple of workers at least 2 just to make sure)
+	//on/once should listen to events emitted by either master or workers
+	//removeListener/removeAllListeners should revoke all the listeners triggered above
+
+	//for the slave emitter, the behavior should be:
+	//emit is to sent the event to both master & the worker itself
+	//on/once should listen to events emitted from either master or workers
+	//removeListener/removeAllListeners should revoke all the listeners triggered abovesss
+
 });
