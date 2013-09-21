@@ -19,7 +19,7 @@ describe('cluster-emitter', function(){
 
 			this.timeout(500);
 
-			var emitter = require('../lib/cluster-emitter.js').emitter;
+			var emitter = require('../lib/cluster-emitter');
 
 			emitter.should.be.ok;
 			_.isFunction(emitter.emit).should.equal(true);
