@@ -2,6 +2,7 @@
 
 var should = require('should'),
 	_ = require('underscore'),
+	fork = require('child_process').fork,
 	getLogger = require('../lib/utils.js').getLogger;
 
 describe('cluster-emitter', function(){
@@ -54,5 +55,23 @@ describe('cluster-emitter', function(){
 	//emit is to sent the event to both master & the worker itself
 	//on/once should listen to events emitted from either master or workers
 	//removeListener/removeAllListeners should revoke all the listeners triggered abovesss
+
+	describe('cluster-emitter', function(){
+
+		it('should work in cluster mode', function(done){
+
+			this.timeout(3000);
+
+			var token = 't-' + Date.now(),
+				clusterRuntime = fork(require.resolve('./lib/cluster-emitter-runtime.js'), ['--token=' + token]);
+			
+			clusterRuntime.on('message', function(msg){
+
+				done(msg.exit);
+
+			});
+
+		});
+	});
 
 });
