@@ -8,7 +8,7 @@ var should = require('should'),
 	when = require('when'),
 	timeout = require('when/timeout'),
 	_ = require('underscore'),
-	emitter = require('../../lib/cluster-emitter'),
+	emitter = require('../../lib/emitter'),
 	logger = process.getLogger(__filename);
 
 if(cluster.isMaster){
