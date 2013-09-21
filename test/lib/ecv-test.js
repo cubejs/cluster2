@@ -58,7 +58,7 @@ describe('ecv', function(){
 				'emitter': emitter
 			});
 
-			pickAvailablePort(8000, 9000).then(function(port){
+			pickAvailablePort(8000, 8099).then(function(port){
 
 				server.listen(port, function(){
 					//server started;
@@ -118,7 +118,7 @@ describe('ecv', function(){
 				'emitter': emitter
 			});
 
-			pickAvailablePort(8000, 9000).then(function(port){
+			pickAvailablePort(8000, 8099).then(function(port){
 
 				server.listen(port, function(){
 					//server started;
@@ -186,8 +186,8 @@ describe('ecv', function(){
 				emitter = new EventEmitter(),
 				disabled = false;
 
-			pickAvailablePort(8000, 9000).then(function(port){
-
+			pickAvailablePort(8000, 8099).then(function(port){
+				
 				ecv.enable(app, {
 					'root': '/ecv',
 					'mode': 'monitor',
