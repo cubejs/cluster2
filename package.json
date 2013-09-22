@@ -32,7 +32,7 @@
     "scripts": {
         "prestart": "rm -rf ./log; mkdir log",
         "start": "node ./examples/cluster-demo.js",
-        "test": "./node_modules/mocha/bin/mocha ./test/*"
+        "test": "./node_modules/mocha/bin/mocha ./test/*-test.js"
     },
     "optionalDependencies": {
         

@@ -1,6 +1,7 @@
 'use strict';
 
 var should = require('should'),
+	fork = require('child_process').fork,
 	getLogger = require('../lib/utils.js').getLogger;
 
 describe('cluster-status', function(){
@@ -131,5 +132,23 @@ describe('cluster-status', function(){
 	//we'll need to verify that statuses, register, setStatus, getStatus all work from workers view, masters view
 	//worker should see components registered by itself
 	//master should see components registered by itself and all of its workers
+
+	describe.skip('cluster-status', function(){
+
+		it('should work in cluster mode', function(done){
+
+			this.timeout(3000);
+
+			var token = 't-' + Date.now(),
+				clusterRuntime = fork(require.resolve('./lib/cluster-status-runtime.js'), ['--token=' + token]);
+			
+			clusterRuntime.on('message', function(msg){
+
+				done(msg.exit);
+
+			});
+
+		});
+	});
 
 });
