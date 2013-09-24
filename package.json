@@ -20,17 +20,23 @@
         "express": "~3.1.0",
         "socket.io": "~0.9.16",
         "ejs": "~0.8.4",
-        "node-inspector": "~0.2.0-beta4",
+        "node-inspector": "~0.4.0",
         "nodefly-gcinfo": "~0.0.15",
         "bignumber.js": "~1.1.1"
     },
     "devDependencies": {
         "mocha": "~1.11.0",
-        "should": "~1.2.2"
+        "should": "~1.2.2",
+        "optimist": "~0.6.0"
     },
     "scripts": {
         "prestart": "rm -rf ./log; mkdir log",
-        "start": "node ./test/lib/cluster-test.js"
+        "start": "node ./examples/cluster-demo.js",
+        "stop": "node ./lib/shutdown.js",
+        "poststop": "rm ./log/*.log; rm ./pids/*.pid",
+        "test": "./node_modules/mocha/bin/mocha ./test/*-test.js"
     },
-    "optionalDependencies": {}
+    "optionalDependencies": {
+        
+    }
 }
