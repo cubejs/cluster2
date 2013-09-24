@@ -7,29 +7,25 @@ var Cluster = require('../lib/index.js').Cluster,
 
 app.get('/', function(req, res){
 
-	require('../lib/cache-usr.js').user()
-		.then(function(usr){
+	require('../lib/cache').use('demo-cache')
+		.then(function(cache){
 
 			var key = req.query.key,
 				val = req.query.value;
 
 			if(!key){
-				usr.get('key', function(){
+				cache.get('key', function(){
 						return 'value';
-					}, 
-					{
-						'persist': true,
-						'expire': null
 					})
 					.then(function(value){
 						res.send(util.format('hello from:%d whose cached value is:%j', process.pid, value), 200);
 					});
 			}
 			else{
-				console.log('user set:' + key + '=' + val);
-				usr.set(key, val)
-					.then(function(){
-						res.send(util.format('user set:%s to value:%j', key, val), 200);
+				console.log('[cache] set:%s=%j', key, val);
+				cache.set(key, val)
+					.then(function(set){
+						res.send(util.format('[cache] set:%s to value:%j result:%s', key, val, set), 200);
 					});
 			}
 		});
