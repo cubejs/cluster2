@@ -48,14 +48,14 @@ describe('cache', function(){
 							logger.info('[test] first "key" get attempt should fail:%j', value);
 							should.not.exist(value);
 
-							usr.watch(namespace, 'key', function(value){
+							usr.watch(namespace, 'key', function(value, key){
 
 								value.should.equal('value');
 
 								logger.info('[test] watch key triggered');
 							});
 
-							usr.watch(namespace, null, function(key, value){
+							usr.watch(namespace, null, function(value, key){
 
 								key.should.equal('key');
 								value.should.equal('value');

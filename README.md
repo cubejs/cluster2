@@ -9,6 +9,41 @@ You'll see that we've simplified the api a great deal, the listen method takes n
 That's based on the adoption of Promise A+ (when.js). 
 You'll also find redundant features like: multiple app/port support, ecv on workers removed, to keep code clean.
 
+* **`cluster`**
+
+```javascript
+var Cluster = require('cluster2').Cluster;
+
+var runtime = new Cluster({
+
+  'noWorkers': 1, //default number of cpu cores
+	'createServer': require('http').createServer,
+	'app': app,
+	'port': 9090,
+	'monPort': 9091,
+	'debug': { //node-inspector integration
+		'webPort': 9092,
+		'saveLiveEdit': true
+	},
+	'ecv': {
+	  'mode': 'control',
+	  'root': '/ecv'
+	}
+	'heartbeatInterval': 5000 //heartbeat rate
+});
+
+runtime.listen()
+.then(function(resolved){
+   //cluster started
+   //resolved is an object which embeds server, app, port, etc.
+})
+.otherwise(function(error){
+  //cluster start error
+});
+//the major change is the return of promise and the much simplified #listen (as all options pushed to construction)
+
+```
+
 ## debug
 
 Ever imagined debugging to be simpler? Here's the good news, we've carefully designed the debugging process from the ground up of the new cluster.
@@ -23,25 +58,30 @@ before it gets slow.
 
 ## caching
 
-This is as exciting as debugging, it allows workers to share computation results, watch over others, in a fast and reliable manner.
+This is as exciting as debugging, it allows workers to share computation results, watch over changes, in a fast and reliable manner.
 We tried work delegation to master once, and found it error-prone and difficult to code against, caching makes things so much simpler, using domain socket, so much faster.
 The atomic getOrLoad syntax makes sharing efficient, running cache manager as another worker and persistence support make it disaster recoverable.
 It's like having a memcached process, only this is node, and you can debug it too.
 
-* **`user`** 
+* **`cache`** 
 
 ```javascript
-require('cluster/cache-user').user().then(function(usr){
-//the usr is the major api cluster application could then interact with
-//the usr is the same accross the entire worker process
+require('cluster/cache').use('cache-name', {
+  'persist': true,//default false
+  'expire': 60000 //in ms, default 0, meaning no expiration
+})
+.then(function(cache){
+//the cache is the major api cluster application could then interact with
+//the cache values are the same accross the entire worker process
+//'cache-name' is a namespace, #use will create such namespace if yet exists
 });
 ```
 * **`keys`**
 
 ```javascript
-var usr;//assume the usr has been assigned as above
+var cache;//assume the cache is in use as above
 
-usr.keys({
+cache.keys({
   'wait': 100//this is a timeout option
 })
 .then(function(keys){
@@ -51,45 +91,47 @@ usr.keys({
 * **`get`**
 
 ```javascript
-var usr;//assume the usr has been assigned as above
+var cache;
 
-usr.get('cache-key-1', //key must be string
+cache.get('cache-key-1', //key must be string
   function(){
-    return 'cache-value-loaded-1';
+    return 'cache-value-loaded-1'; //value could be value or promise
   },
   {
-    'persist': false,//default false, otherwise the loaded value will be persisted, if not loaded, the persistence info will be returned
-    'expire': 10000,//default null, otherwise it means in how many ms the key/value should be expired if not loaded. 
     'wait': 100//this is a timeout option
   })
-  .then(function(value, persist, expire){
+  .then(function(value){
     //the value resolved is anything already cached or the value newly loaded
     //note, the loader will be called once and once only, if it failed, the promise of get will be rejected.
+  })
+  .otherwise(function(error){
+  
   });
 ```
 * **`set`**
 
 ```javascript
-var usr;//assume the usr has been assigned as above
+var cache;
 
-usr.set('cache-key-1', //key must be string
+cache.set('cache-key-1', //key must be string
   'cache-value-loaded-1', //value could be any json object
   {
-    'persist': false,
-    'expire': 10000,
     'leaveIfNotNull': false,//default false, which allows set to overwrite existing values, use true for the atomic getAndLoad
     'wait': 100
   })
   .then(function(happens){
   //the happens resolved is a true/false value indicating if the value has been accepted by the cache manager
+  })
+  .otherwise(function(error){
+  
   });
 ```
 * **`del`**
 
 ```javascript
-var usr;//assume the usr has been assigned as above
+var cache;
 
-usr.del('cache-key-1', //key must be string
+cache.del('cache-key-1', //key must be string
   {
     'wait': 100//this is a timeout option
   })
@@ -100,36 +142,70 @@ usr.del('cache-key-1', //key must be string
 * **`watch`**
 
 ```javascript
-var usr;//assume the usr has been assigned as above
+var cache;
 
-usr.watch('cache-key-1', //key must be string
-  function watching(value){
+cache.watch('cache-key-1', //key must be string or null (indicating watch everything)
+  function watching(value, key){
     //this is a callback which will be called anytime the associatd key has an updated value
   });
 ```
 * **`unwatch`**
 
 ```javascript
-var usr;//assume the usr has been assigned as above
+var cache;
 
-usr.unwatch('cache-key-1', watching);//stop watching
-
+cache.unwatch('cache-key-1', watching);//stop watching
 ```
-* **`makeCopy`**
+
+## status
+
+This is a helpful piece evolved from the current cluster2, which is to allow applications to easily register status of any interest.
+It allows each worker to register its own state, master would automatically aggregate all states from active workers.
+It works nicely with our monitor capability (via debug middleware)
+
+* **`register`**
 
 ```javascript
-var usr;//assume the usr has been assigned as above
-
-usr.makeCopy();
-//this forces the user to keep copy of cache manager whenever a value is loaded, it also watches any change and update the copy automatically
-//this option is to make the cache more reliable but could cause consistency problem when the cache manager dies
+require('cluster/status')
+  .register('status-name',
+    function(){
+      return 'view';//view function
+    },
+    function(value){
+      //update function
+    });
 ```
-* **`unmakeCopy`**
+
+* **`statuses`**
 
 ```javascript
-var usr;//assume the usr has been assigned as above
+require('cluster/status')
+  .statuses(); //return names of registered statuses
+```
 
-usr.unmakeCopy();
-//the opposite as makeCopy, and the default behavior, no copy is kept locally, all queries go to cache manager
-//which maximizes the consistency, but availability will be hurt when the cache manager is in the middle over recovery
+* **`getStatus`**
+
+```javascript
+require('cluster/status')
+  .getStatus('status-name')
+  .then(function(status){
+    //got status
+  })
+  .otherwise(function(error){
+    //err
+  });
+```
+
+* **`setStatus`**
+
+```javascript
+require('cluster/status')
+  .setStatus('status-name',
+    'value')
+  .then(function(set){
+    //set or not
+  })
+  .otherwise(function(error){
+    //err
+  });
 ```
