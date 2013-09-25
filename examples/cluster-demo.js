@@ -1,6 +1,6 @@
 'use strict';
 
-var Cluster = require('../lib/index.js').Cluster,
+var listen = require('../lib/index').listen,
 	util = require('util'),
 	express = require('express'),
 	app = express();
@@ -31,7 +31,7 @@ app.get('/', function(req, res){
 		});
 });
 
-new Cluster({
+listen({
 	'noWorkers': 1,
 	'createServer': require('http').createServer,
 	'app': app,
@@ -43,7 +43,6 @@ new Cluster({
 	},
 	'heartbeatInterval': 5000
 })
-.listen()
 .then(function(resolve){
 
 	var masterOrWorker = resolve.master || resolve.worker;
