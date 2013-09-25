@@ -9,6 +9,41 @@ You'll see that we've simplified the api a great deal, the listen method takes n
 That's based on the adoption of Promise A+ (when.js). 
 You'll also find redundant features like: multiple app/port support, ecv on workers removed, to keep code clean.
 
+* **`cluster`**
+
+```javascript
+var Cluster = require('cluster2').Cluster;
+
+var runtime = new Cluster({
+
+  'noWorkers': 1, //default number of cpu cores
+	'createServer': require('http').createServer,
+	'app': app,
+	'port': 9090,
+	'monPort': 9091,
+	'debug': { //node-inspector integration
+		'webPort': 9092,
+		'saveLiveEdit': true
+	},
+	'ecv': {
+	  'mode': 'control',
+	  'root': '/ecv'
+	}
+	'heartbeatInterval': 5000 //heartbeat rate
+});
+
+runtime.listen()
+.then(function(resolved){
+   //cluster started
+   //resolved is an object which embeds server, app, port, etc.
+})
+.otherwise(function(error){
+  //cluster start error
+});
+//the major change is the return of promise and the much simplified #listen (as all options pushed to construction)
+
+```
+
 ## debug
 
 Ever imagined debugging to be simpler? Here's the good news, we've carefully designed the debugging process from the ground up of the new cluster.
@@ -119,4 +154,58 @@ cache.watch('cache-key-1', //key must be string or null (indicating watch everyt
 ```javascript
 var cache;
 
-.unwatch('cache-key-1', watching);//stop watching
+cache.unwatch('cache-key-1', watching);//stop watching
+```
+
+## status
+
+This is a helpful piece evolved from the current cluster2, which is to allow applications to easily register status of any interest.
+It allows each worker to register its own state, master would automatically aggregate all states from active workers.
+It works nicely with our monitor capability (via debug middleware)
+
+* **`register`**
+
+```javascript
+require('cluster/status')
+  .register('status-name',
+    function(){
+      return 'view';//view function
+    },
+    function(value){
+      //update function
+    });
+```
+
+* **`statuses`**
+
+```javascript
+require('cluster/status')
+  .statuses(); //return names of registered statuses
+```
+
+* **`getStatus`**
+
+```javascript
+require('cluster/status')
+  .getStatus('status-name')
+  .then(function(status){
+    //got status
+  })
+  .otherwise(function(error){
+    //err
+  });
+```
+
+* **`setStatus`**
+
+```javascript
+require('cluster/status')
+  .setStatus('status-name',
+    'value')
+  .then(function(set){
+    //set or not
+  })
+  .otherwise(function(error){
+    //err
+  });
+```
