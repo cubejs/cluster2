@@ -7,7 +7,7 @@ This is a completely overhaul, not expected to be backward compatible, but the f
 
 You'll see that we've simplified the api a great deal, the listen method takes no arguments at all, and all dancing parts could be injected through the construation.
 That's based on the adoption of Promise A+ (when.js). 
-You'll also find redundant features like: multiple app/port support, ecv on workers removed, to keep code clean.
+You'll also find redundant features like: multiple app/port support, ecv on workers removed, none cluster mode removed, to keep code clean.
 
 * **`cluster`**
 
@@ -74,6 +74,42 @@ emitter.emit('event', ['self', 'master'], 'arg0', 'arg1');
 
 ```
 
+## ecv
+
+ECV is a preserved feature, but we've simplified that too. Most of the use cases we've seen doesn't really need an ECV for each worker process, in fact
+that could be very confusing. To let tools view the cluster as an entirety, ECV is to run only in master runtime, it still supports the 'monitor' vs. 'control' mode.
+
+```javascript
+
+//ecv control could be used as such
+var enable = require('cluster2/ecv').enable;
+
+enable(app);
+
+//more use cases just let cluster2 enables it by passing configurations to the #listen
+var listen = require('cluster2').listen;
+
+listen({
+
+  'noWorkers': 1, //default number of cpu cores
+	'createServer': require('http').createServer,
+	'app': app,
+	'port': 9090,
+	'monPort': 9091,
+	'debug': { //node-inspector integration
+		'webPort': 9092,
+		'saveLiveEdit': true
+	},
+	'ecv': {
+	  'mode': 'control',//could be 'monitor' or 'control'
+	  'root': '/ecv',
+      'markUp': '/ecv/markUp',
+      'markDown': '/ecv/markDown'
+	}
+	'heartbeatInterval': 5000 //heartbeat rate
+})
+```
+
 ## debug
 
 Ever imagined debugging to be simpler? Here's the good news, we've carefully designed the debugging process from the ground up of the new cluster.
@@ -117,6 +153,29 @@ cache.keys({
 .then(function(keys){
 //the keys resolved is an array of all cached keys:string[] from the cache-manager's view
 });
+
+//to use the cache, we assume u've started the cluster2 with caching enabled, and you can select how cache manager should be run
+listen({
+
+  'noWorkers': 1, //default number of cpu cores
+	'createServer': require('http').createServer,
+	'app': app,
+	'port': 9090,
+	'monPort': 9091,
+	'debug': { //node-inspector integration
+		'webPort': 9092,
+		'saveLiveEdit': true
+	},
+	'ecv': {
+	  'mode': 'control',
+	  'root': '/ecv'
+	},
+    'cache': {
+      'enable': true,//true by default
+      'mode': 'standalone'//as a standalone worker process by default, otherwise will crush with the master process
+    }
+	'heartbeatInterval': 5000 //heartbeat rate
+})
 ```
 * **`get`**
 
