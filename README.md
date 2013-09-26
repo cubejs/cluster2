@@ -12,9 +12,9 @@ You'll also find redundant features like: multiple app/port support, ecv on work
 * **`cluster`**
 
 ```javascript
-var Cluster = require('cluster2').Cluster;
+var listen = require('cluster2').listen;
 
-var runtime = new Cluster({
+listen({
 
   'noWorkers': 1, //default number of cpu cores
 	'createServer': require('http').createServer,
@@ -30,9 +30,7 @@ var runtime = new Cluster({
 	  'root': '/ecv'
 	}
 	'heartbeatInterval': 5000 //heartbeat rate
-});
-
-runtime.listen()
+})
 .then(function(resolved){
    //cluster started
    //resolved is an object which embeds server, app, port, etc.
@@ -41,6 +39,38 @@ runtime.listen()
   //cluster start error
 });
 //the major change is the return of promise and the much simplified #listen (as all options pushed to construction)
+
+```
+
+## emitter
+
+Cluster used to be an emitter itself, which isn't very much helpful, and forced event register/emit to be delayed till the cluster instance is created.
+Even if it's created, accessing the instance from different modules require the instance to be passed down, or global, neither looks appealing.
+The new cluster-emitter is designed to work with cluster not cluster2 instance at all (in fact, we eliminated the cluster2 instance as you see the api above)
+The emitter also makes communications between worker & master (or reverse) as simple as a normal EventEmitter.
+
+```javascript
+var emitter = require('cluster2/emitter');
+
+emitter.on('event', function callback(){
+	//an event callback
+});
+
+emitter.once('event', function callbackOnce(){
+	//another event callback
+});
+
+emitter.removeListener('event', callback);
+emitter.removeListener('event', callbackOnce);
+emitter.removeAllListeners('event');
+
+emitter.emit('event', null, 'arg0', 'arg1');
+//the 'null' value above defaults to the default target of the event
+//it varies in master and worker runtime, in master it's the same as saying
+emitter.emit('event', ['self'].concat(_.map(cluster.workers, function(w){return w.process.pid;})), 'arg0', 'arg1');
+//as this indicates, the master's emit target by default is everybody, master itself and all active workers
+//and in worker runtime, the null value is intepreted as worker itself and master
+emitter.emit('event', ['self', 'master'], 'arg0', 'arg1');
 
 ```
 
