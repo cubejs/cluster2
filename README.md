@@ -7,14 +7,14 @@ This is a completely overhaul, not expected to be backward compatible, but the f
 
 You'll see that we've simplified the api a great deal, the listen method takes no arguments at all, and all dancing parts could be injected through the construation.
 That's based on the adoption of Promise A+ (when.js). 
-You'll also find redundant features like: multiple app/port support, ecv on workers removed, to keep code clean.
+You'll also find redundant features like: multiple app/port support, ecv on workers removed, none cluster mode removed, to keep code clean.
 
 * **`cluster`**
 
 ```javascript
-var Cluster = require('cluster2').Cluster;
+var listen = require('cluster2').listen;
 
-var runtime = new Cluster({
+listen({
 
   'noWorkers': 1, //default number of cpu cores
 	'createServer': require('http').createServer,
@@ -30,9 +30,7 @@ var runtime = new Cluster({
 	  'root': '/ecv'
 	}
 	'heartbeatInterval': 5000 //heartbeat rate
-});
-
-runtime.listen()
+})
 .then(function(resolved){
    //cluster started
    //resolved is an object which embeds server, app, port, etc.
@@ -42,6 +40,74 @@ runtime.listen()
 });
 //the major change is the return of promise and the much simplified #listen (as all options pushed to construction)
 
+```
+
+## emitter
+
+Cluster used to be an emitter itself, which isn't very much helpful, and forced event register/emit to be delayed till the cluster instance is created.
+Even if it's created, accessing the instance from different modules require the instance to be passed down, or global, neither looks appealing.
+The new cluster-emitter is designed to work with cluster not cluster2 instance at all (in fact, we eliminated the cluster2 instance as you see the api above)
+The emitter also makes communications between worker & master (or reverse) as simple as a normal EventEmitter.
+
+```javascript
+var emitter = require('cluster2/emitter');
+
+emitter.on('event', function callback(){
+	//an event callback
+});
+
+emitter.once('event', function callbackOnce(){
+	//another event callback
+});
+
+emitter.removeListener('event', callback);
+emitter.removeListener('event', callbackOnce);
+emitter.removeAllListeners('event');
+
+emitter.emit('event', null, 'arg0', 'arg1');
+//the 'null' value above defaults to the default target of the event
+//it varies in master and worker runtime, in master it's the same as saying
+emitter.emit('event', ['self'].concat(_.map(cluster.workers, function(w){return w.process.pid;})), 'arg0', 'arg1');
+//as this indicates, the master's emit target by default is everybody, master itself and all active workers
+//and in worker runtime, the null value is intepreted as worker itself and master
+emitter.emit('event', ['self', 'master'], 'arg0', 'arg1');
+
+```
+
+## ecv
+
+ECV is a preserved feature, but we've simplified that too. Most of the use cases we've seen doesn't really need an ECV for each worker process, in fact
+that could be very confusing. To let tools view the cluster as an entirety, ECV is to run only in master runtime, it still supports the 'monitor' vs. 'control' mode.
+
+```javascript
+
+//ecv control could be used as such
+var enable = require('cluster2/ecv').enable;
+
+enable(app);
+
+//more use cases just let cluster2 enables it by passing configurations to the #listen
+var listen = require('cluster2').listen;
+
+listen({
+
+  'noWorkers': 1, //default number of cpu cores
+	'createServer': require('http').createServer,
+	'app': app,
+	'port': 9090,
+	'monPort': 9091,
+	'debug': { //node-inspector integration
+		'webPort': 9092,
+		'saveLiveEdit': true
+	},
+	'ecv': {
+	  'mode': 'control',//could be 'monitor' or 'control'
+	  'root': '/ecv',
+      'markUp': '/ecv/markUp',
+      'markDown': '/ecv/markDown'
+	}
+	'heartbeatInterval': 5000 //heartbeat rate
+})
 ```
 
 ## debug
@@ -66,7 +132,7 @@ It's like having a memcached process, only this is node, and you can debug it to
 * **`cache`** 
 
 ```javascript
-require('cluster/cache').use('cache-name', {
+require('cluster2/cache').use('cache-name', {
   'persist': true,//default false
   'expire': 60000 //in ms, default 0, meaning no expiration
 })
@@ -87,6 +153,29 @@ cache.keys({
 .then(function(keys){
 //the keys resolved is an array of all cached keys:string[] from the cache-manager's view
 });
+
+//to use the cache, we assume u've started the cluster2 with caching enabled, and you can select how cache manager should be run
+listen({
+
+  'noWorkers': 1, //default number of cpu cores
+	'createServer': require('http').createServer,
+	'app': app,
+	'port': 9090,
+	'monPort': 9091,
+	'debug': { //node-inspector integration
+		'webPort': 9092,
+		'saveLiveEdit': true
+	},
+	'ecv': {
+	  'mode': 'control',
+	  'root': '/ecv'
+	},
+    'cache': {
+      'enable': true,//true by default
+      'mode': 'standalone'//as a standalone worker process by default, otherwise will crush with the master process
+    }
+	'heartbeatInterval': 5000 //heartbeat rate
+})
 ```
 * **`get`**
 
@@ -166,7 +255,7 @@ It works nicely with our monitor capability (via debug middleware)
 * **`register`**
 
 ```javascript
-require('cluster/status')
+require('cluster2/status')
   .register('status-name',
     function(){
       return 'view';//view function
@@ -179,14 +268,14 @@ require('cluster/status')
 * **`statuses`**
 
 ```javascript
-require('cluster/status')
+require('cluster2/status')
   .statuses(); //return names of registered statuses
 ```
 
 * **`getStatus`**
 
 ```javascript
-require('cluster/status')
+require('cluster2/status')
   .getStatus('status-name')
   .then(function(status){
     //got status
@@ -199,7 +288,7 @@ require('cluster/status')
 * **`setStatus`**
 
 ```javascript
-require('cluster/status')
+require('cluster2/status')
   .setStatus('status-name',
     'value')
   .then(function(set){
