@@ -96,7 +96,7 @@ It's like having a memcached process, only this is node, and you can debug it to
 * **`cache`** 
 
 ```javascript
-require('cluster/cache').use('cache-name', {
+require('cluster2/cache').use('cache-name', {
   'persist': true,//default false
   'expire': 60000 //in ms, default 0, meaning no expiration
 })
@@ -196,7 +196,7 @@ It works nicely with our monitor capability (via debug middleware)
 * **`register`**
 
 ```javascript
-require('cluster/status')
+require('cluster2/status')
   .register('status-name',
     function(){
       return 'view';//view function
@@ -209,14 +209,14 @@ require('cluster/status')
 * **`statuses`**
 
 ```javascript
-require('cluster/status')
+require('cluster2/status')
   .statuses(); //return names of registered statuses
 ```
 
 * **`getStatus`**
 
 ```javascript
-require('cluster/status')
+require('cluster2/status')
   .getStatus('status-name')
   .then(function(status){
     //got status
@@ -229,7 +229,7 @@ require('cluster/status')
 * **`setStatus`**
 
 ```javascript
-require('cluster/status')
+require('cluster2/status')
   .setStatus('status-name',
     'value')
   .then(function(set){
