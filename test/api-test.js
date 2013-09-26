@@ -15,7 +15,7 @@ describe('cluster2', function(){
 			done();
 
 		});
-		
+
 	});
 
 	describe('#listen', function(){
@@ -24,6 +24,16 @@ describe('cluster2', function(){
 
 			done();
 
+		});
+
+	});
+
+	describe('#run', function(){
+
+		it('should start running the given runnable', function(done){
+
+			done();
+			
 		});
 
 	});
