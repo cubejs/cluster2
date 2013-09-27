@@ -167,8 +167,6 @@ describe('cache', function(){
 
 					}, done);
 
-				done();
-
 			}, done);
 		});
 
