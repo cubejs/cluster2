@@ -181,7 +181,6 @@ describe('utils', function(){
                 }
             }).should.equal(false);
             
-            debugger;
             assertOld({
                 'pid': pid,
                 'tps': 40,//over 10%
@@ -261,7 +260,6 @@ describe('utils', function(){
 
 		it('should let us queue the suicide workers one after another', function(done){
 
-			debugger;
 			var deathQueue = utils.deathQueue,
 				emitter = new (require('events').EventEmitter)(),
 				pid = Math.floor(process.pid * (1 + Math.random())),
