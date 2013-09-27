@@ -89,6 +89,13 @@ describe('cache', function(){
 													inspection[1].should.equal(false);
 													inspection[2].should.equal(0);
 
+                                                    var stat = usr.stat(namespace);
+                                                    stat.should.be.ok;
+                                                    stat.hit.should.equal(1);
+                                                    stat.miss.should.equal(1);
+                                                    stat.load.should.equal(0);
+                                                    stat.error.should.equal(0);
+                                                    
 													done();
 
 												}, done);
@@ -146,6 +153,13 @@ describe('cache', function(){
 							logger.info('[test] cache 2nd "get" with loader attempt should succeed given value:%j', value);
 
 							value.should.equal('value');
+                            
+                            var stat = cache.stat();
+                            stat.should.be.ok;
+                            stat.hit.should.equal(0);
+                            stat.miss.should.equal(2);
+                            stat.load.should.equal(1);
+                            stat.error.should.equal(0);
 
 							done();
 
