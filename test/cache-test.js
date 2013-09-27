@@ -1,7 +1,7 @@
 'use strict';
 
 var should = require('should'),
-	getLogger = require('../lib/utils.js').getLogger,
+	getLogger = require('../lib/utils').getLogger,
 	logger = getLogger(__filename);
 
 describe('cache', function(){
@@ -11,7 +11,7 @@ describe('cache', function(){
 
 		process.getLogger = getLogger;
 
-		var mgr = require('../lib/cache-mgr.js'),
+		var mgr = require('../lib/cache-mgr'),
 			svr = mgr.createServer(mgr.app);
 
 		svr.listen(mgr.port, mgr.afterServerStarted);
@@ -36,7 +36,7 @@ describe('cache', function(){
 
 			this.timeout(3000);
 
-			require('../lib/cache-usr.js').user()
+			require('../lib/cache-usr').user()
 				.then(function(usr){
 
 					var namespace = 'ns-' + Date.now();
