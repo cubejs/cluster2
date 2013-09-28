@@ -34,6 +34,7 @@
         "start": "node ./examples/cluster-demo.js",
         "stop": "node ./lib/shutdown.js",
         "poststop": "rm ./log/*.log; rm ./pids/*.pid",
+        "pretest": "rm -rf ./log; mkdir log",
         "test": "./node_modules/mocha/bin/mocha ./test/*-test.js"
     }
 }
