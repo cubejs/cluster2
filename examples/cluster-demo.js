@@ -40,10 +40,13 @@ listen({
 		'webPort': 9092,
 		'saveLiveEdit': true
 	},
-	/*'cache': {
+	'cache': {
 		'enable': true,
 		'mode': 'master'
-	},*/
+	},
+	'gc': {
+		'monitor': false
+	},
 	'heartbeatInterval': 5000
 })
 .then(function(resolve){
