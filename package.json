@@ -21,7 +21,7 @@
         "socket.io": "~0.9.16",
         "ejs": "~0.8.4",
         "node-inspector": "~0.4.0",
-        "nodefly-gcinfo": "~0.0.15",
+        "node-gc": "~0.2.0",
         "bignumber.js": "~1.1.1"
     },
     "devDependencies": {
