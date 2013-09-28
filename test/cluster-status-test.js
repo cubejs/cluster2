@@ -2,7 +2,7 @@
 
 var should = require('should'),
 	fork = require('child_process').fork,
-	getLogger = require('../lib/utils.js').getLogger;
+	getLogger = require('../lib/utils').getLogger;
 
 describe('cluster-status', function(){
 
@@ -140,7 +140,7 @@ describe('cluster-status', function(){
 			this.timeout(3000);
 
 			var token = 't-' + Date.now(),
-				clusterRuntime = fork(require.resolve('./lib/cluster-status-runtime.js'), ['--token=' + token]);
+				clusterRuntime = fork(require.resolve('./lib/cluster-status-runtime'), ['--token=' + token]);
 			
 			clusterRuntime.on('message', function(msg){
 

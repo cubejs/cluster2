@@ -41,11 +41,19 @@ listen({
 		'webPort': 9092,
 		'saveLiveEdit': true
 	},
+	/*'cache': {
+		'enable': true,
+		'mode': 'master'
+	},*/
 	'heartbeatInterval': 5000
 })
 .then(function(resolve){
 
-	var masterOrWorker = resolve.master || resolve.worker;
+	require('../lib/status').register('worker', function(){
+		return process.pid;
+	});
+})
+.otherwise(function(error){
 
-	masterOrWorker.status.register('worker', process.pid);
+	console.trace(error);
 });
