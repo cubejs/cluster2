@@ -41,6 +41,10 @@ listen({
 		'webPort': 9092,
 		'saveLiveEdit': true
 	},
+	/*'cache': {
+		'enable': true,
+		'mode': 'master'
+	},*/
 	'heartbeatInterval': 5000
 })
 .then(function(resolve){
