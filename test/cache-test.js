@@ -1,7 +1,7 @@
 'use strict';
 
 var should = require('should'),
-	getLogger = require('../lib/utils.js').getLogger,
+	getLogger = require('../lib/utils').getLogger,
 	logger = getLogger(__filename);
 
 describe('cache', function(){
@@ -11,7 +11,7 @@ describe('cache', function(){
 
 		process.getLogger = getLogger;
 
-		var mgr = require('../lib/cache-mgr.js'),
+		var mgr = require('../lib/cache-mgr'),
 			svr = mgr.createServer(mgr.app);
 
 		svr.listen(mgr.port, mgr.afterServerStarted);
@@ -36,7 +36,7 @@ describe('cache', function(){
 
 			this.timeout(3000);
 
-			require('../lib/cache-usr.js').user()
+			require('../lib/cache-usr').user()
 				.then(function(usr){
 
 					var namespace = 'ns-' + Date.now();
@@ -89,6 +89,13 @@ describe('cache', function(){
 													inspection[1].should.equal(false);
 													inspection[2].should.equal(0);
 
+                                                    var stat = usr.stat(namespace);
+                                                    stat.should.be.ok;
+                                                    stat.hit.should.equal(1);
+                                                    stat.miss.should.equal(1);
+                                                    stat.load.should.equal(0);
+                                                    stat.error.should.equal(0);
+                                                    
 													done();
 
 												}, done);
@@ -146,14 +153,19 @@ describe('cache', function(){
 							logger.info('[test] cache 2nd "get" with loader attempt should succeed given value:%j', value);
 
 							value.should.equal('value');
+                            
+                            var stat = cache.stat();
+                            stat.should.be.ok;
+                            stat.hit.should.equal(0);
+                            stat.miss.should.equal(2);
+                            stat.load.should.equal(1);
+                            stat.error.should.equal(0);
 
 							done();
 
 						}, done);
 
 					}, done);
-
-				done();
 
 			}, done);
 		});

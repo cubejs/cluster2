@@ -8,8 +8,8 @@ var should = require('should'),
 	timeout = require('when/timeout'),
 	_ = require('underscore'),
 	EventEmitter = require('events').EventEmitter,
-	getLogger = require('../lib/utils.js').getLogger,
-	pickAvailablePort = require('../lib/utils.js').pickAvailablePort;
+	getLogger = require('../lib/utils').getLogger,
+	pickAvailablePort = require('../lib/utils').pickAvailablePort;
 
 function knock(port, path, assertions){
 
@@ -44,7 +44,7 @@ describe('ecv', function(){
 
 			this.timeout(3000);
 
-			var ecv = require('../lib/ecv.js'),
+			var ecv = require('../lib/ecv'),
 				app = express(),
 				server = http.createServer(app),
 				emitter = new EventEmitter();
@@ -104,7 +104,7 @@ describe('ecv', function(){
 
 			this.timeout(5000);
 
-			var ecv = require('../lib/ecv.js'),
+			var ecv = require('../lib/ecv'),
 				app = express(),
 				server = http.createServer(app),
 				emitter = new EventEmitter();

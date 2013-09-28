@@ -1,7 +1,7 @@
 'use strict';
 
 var should = require('should'),
-	utils = require('../lib/utils.js'),
+	utils = require('../lib/utils'),
 	path = require('path'),
 	when = require('when'),
 	fs = require('graceful-fs'),
@@ -138,6 +138,167 @@ describe('utils', function(){
 
 			done();
 		});
+	});
+    
+    describe('#assertOld', function(){
+        
+        it('should use the heuristic to determine when gc is hurting tps', function(done){
+        
+            //whenever tps grow up, whether or not other metrics goes up/down assertion should be false.
+            var pid = Math.floor(process.pid * (1 + Math.random())),
+                assertOld = utils.assertOld;
+            
+            _.each(_.range(0, 1000), function(ith){
+            
+                assertOld({
+                    'pid': pid,
+                    'tps': ith,
+                    'cpu': ith,
+                    'memory': ith,
+                    'gc': {
+                        'incremental': ith,
+                        'full': ith
+                    }
+                }).should.equal(false);
+            });
+            
+            done();
+        });
+        
+        it('should assert true whenever a degradation of more than 10% happens', function(done){
+        
+            var pid = Math.floor(process.pid * (1 + Math.random())),
+                assertOld = utils.assertOld;
+            
+            assertOld({
+                'pid': pid,
+                'tps': 50,
+                'cpu': 50,
+                'memory': 1000000000,
+                'gc': {
+                    'incremental': 100,
+                    'full': 10
+                }
+            }).should.equal(false);
+            
+            assertOld({
+                'pid': pid,
+                'tps': 40,//over 10%
+                'cpu': 55,//higher
+                'memory': 1100000000,
+                'gc': {
+                    'incremental': 110,
+                    'full': 11
+                }
+            }).should.equal(true);
+            
+            done();
+        });
+        
+        it('should give 10% margin for tolerance', function(done){
+            
+            var pid = Math.floor(process.pid * (1 + Math.random())),
+                assertOld = utils.assertOld;
+            
+            assertOld({
+                'pid': pid,
+                'tps': 50,
+                'cpu': 50,
+                'memory': 1000000000,
+                'gc': {
+                    'incremental': 100,
+                    'full': 10
+                }
+            }).should.equal(false);
+            
+            assertOld({
+                'pid': pid,
+                'tps': 48,//less than 10%
+                'cpu': 55,//higher
+                'memory': 1100000000,
+                'gc': {
+                    'incremental': 110,
+                    'full': 11
+                }
+            }).should.equal(false);
+            
+            done();
+        });
+
+    });
+
+	describe('#deathQueue', function(){
+
+		it('should let the suicide worker die if it is the 1st one in the queue', function(done){
+
+			var deathQueue = utils.deathQueue,
+				emitter = new (require('events').EventEmitter)(),
+				pid = Math.floor(process.pid * (1 + Math.random())),
+				util = require('util');
+
+			emitter.once('disconnect', function(targets, suicide){
+
+				suicide.should.equal(pid);
+				done();
+			});
+
+			deathQueue(pid, emitter, function(){
+
+				var successor = pid + 1;
+				process.nextTick(function(){
+					emitter.emit(util.format('worker-%d-listening', successor));
+				});
+
+				return {
+					'process': {
+						'pid': successor
+					}
+				}
+			});
+
+		});
+
+		it('should let us queue the suicide workers one after another', function(done){
+
+			var deathQueue = utils.deathQueue,
+				emitter = new (require('events').EventEmitter)(),
+				pid = Math.floor(process.pid * (1 + Math.random())),
+				util = require('util'),
+				expects = _.map(_.range(0, 10), function(ith){return pid + ith * 2;});
+
+			emitter.on('disconnect', function(targets, suicide){
+
+				suicide.should.equal(expects.shift());
+
+				if(!expects.length){
+					done();
+				}
+			});
+
+			_.each(_.range(0, 10), function(ith){
+
+				var ithPid = pid + ith * 2,
+					prevPid = ithPid - 2,
+					ithSuccessor = ithPid + 1;
+
+				deathQueue(ithPid, emitter, function(){
+
+					process.nextTick(function(){
+
+						//because we queued the deaths, at the time this ith worker is to suicide, the i - 1 th worker should have been gone!
+						_.contains(expects, prevPid).should.equal(false);
+						emitter.emit(util.format('worker-%d-listening', ithSuccessor));
+					});
+
+					return {
+						'process': {
+							'pid': ithSuccessor
+						}
+					}
+				});
+			});
+		});
+
 	});
 
 	after(function(done){
