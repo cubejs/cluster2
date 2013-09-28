@@ -28,7 +28,15 @@ listen({
 	'ecv': {
 	  'mode': 'control',
 	  'root': '/ecv'
-	}
+	},
+  'cache': {
+    'enable': 'true',
+    'mode': 'standalone' //default creates a standalone worker specific to run as cache manager, otherwise use master to run
+  },
+  'gc': {
+    'monitor': 'true',  //will reflect the gc (incremental, full) in heartbeat, this conflicts with socket.io somehow
+    'explicit': 'false' //yet impl
+  },
 	'heartbeatInterval': 5000 //heartbeat rate
 })
 .then(function(resolved){
@@ -132,15 +140,11 @@ It's like having a memcached process, only this is node, and you can debug it to
 * **`cache`** 
 
 ```javascript
-require('cluster2/cache').use('cache-name', {
+var cache = require('cluster2/cache').use('cache-name', {
   'persist': true,//default false
   'expire': 60000 //in ms, default 0, meaning no expiration
-})
-.then(function(cache){
-//the cache is the major api cluster application could then interact with
-//the cache values are the same accross the entire worker process
-//'cache-name' is a namespace, #use will create such namespace if yet exists
 });
+
 ```
 * **`keys`**
 

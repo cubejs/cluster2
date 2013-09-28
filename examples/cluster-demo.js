@@ -7,28 +7,27 @@ var listen = require('../lib/index').listen,
 
 app.get('/', function(req, res){
 
-	require('../lib/cache').use('demo-cache')
-		.then(function(cache){
+	var cache = require('../lib/cache').use('demo-cache');
 
-			var key = req.query.key,
-				val = req.query.value;
+	var key = req.query.key,
+		val = req.query.value;
 
-			if(!key){
-				cache.get('key', function(){
-						return 'value';
-					})
-					.then(function(value){
-						res.send(util.format('hello from:%d whose cached value is:%j', process.pid, value), 200);
-					});
-			}
-			else{
-				console.log('[cache] set:%s=%j', key, val);
-				cache.set(key, val)
-					.then(function(set){
-						res.send(util.format('[cache] set:%s to value:%j result:%s', key, val, set), 200);
-					});
-			}
-		});
+	if(!key){
+		cache.get('key', function(){
+				return 'value';
+			})
+			.then(function(value){
+				res.send(util.format('hello from:%d whose cached value is:%j', process.pid, value), 200);
+			});
+	}
+	else{
+		console.log('[cache] set:%s=%j', key, val);
+		cache.set(key, val)
+			.then(function(set){
+				res.send(util.format('[cache] set:%s to value:%j result:%s', key, val, set), 200);
+			});
+	}
+	
 });
 
 listen({
