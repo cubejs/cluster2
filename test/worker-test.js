@@ -22,7 +22,7 @@ describe('worker', function(){
 
 		it('should create a worker instance', function(done){
 
-			this.timeout(30000);
+			this.timeout(10000);
 
 			var logger = process.getLogger();
 
@@ -40,6 +40,9 @@ describe('worker', function(){
 						'port': port,
 						'warmUp': function(){
 							warmed = true;
+						},
+						'gc': {
+							'monitor': true
 						}
 					});
 
