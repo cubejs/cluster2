@@ -4,11 +4,17 @@
 
 exports.index = function(req, res){
 	
-	var template_engine = req.app.settings.template_engine;
+	var cache = require('../../lib/cache').use('template_engine');
 	
 	res.locals.session = req.session;
 
-	res.render('index', { 
-		'title': 'Express with ' + template_engine 
+	cache.get('engine', function(){
+		return req.app.settings.template_engine;
+	})
+	.then(function(engine){	
+
+		res.render('index', { 
+			'title': 'Express with ' + engine 
+		});
 	});
 };
