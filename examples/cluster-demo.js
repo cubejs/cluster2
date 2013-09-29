@@ -45,7 +45,7 @@ listen({
 		'mode': 'master'
 	},
 	'gc': {
-		'monitor': false
+		'monitor': true
 	},
 	'heartbeatInterval': 5000
 })
