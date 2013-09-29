@@ -4,7 +4,7 @@
         "name": "Roy Zhou",
         "email": "huzhou@ebay.com"
     }],
-    "name": "cluster3",
+    "name": "cluster2",
     "version": "0.5.0",
     "engines": {
         "node": ">= 0.10.0"
@@ -27,7 +27,10 @@
     "devDependencies": {
         "mocha": "~1.11.0",
         "should": "~1.2.2",
-        "optimist": "~0.6.0"
+        "optimist": "~0.6.0",
+        "dustjs-linkedin": "~2.0.3",
+        "dustjs-helpers": "~1.1.1",
+        "consolidate": "~0.9.1"
     },
     "scripts": {
         "prestart": "rm -rf ./log; mkdir log",
