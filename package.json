@@ -35,7 +35,7 @@
     },
     "scripts": {
         "prestart": "rm -rf ./log; mkdir log",
-        "start": "node ./examples/cluster-demo.js",
+        "start": "node ./examples/cluster-demo.js &",
         "stop": "node ./lib/shutdown.js",
         "poststop": "rm ./log/*.log; rm ./pids/*.pid",
         "pretest": "rm -rf ./log; mkdir log",
