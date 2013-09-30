@@ -32,12 +32,16 @@ describe('worker', function(){
 
 				var emitter = new EventEmitter(),
 					app = express(),
+					configured = false,
 					warmed = false,
 					worker = new Worker(process, {
 						'emitter': emitter,
 						'createServer': require('http').createServer,
 						'app': app,
 						'port': port,
+						'configureApp': function(app){
+							configured = true;
+						},
 						'warmUp': function(){
 							warmed = true;
 						},
@@ -88,6 +92,7 @@ describe('worker', function(){
 					resolve.port.should.equal(port);
 					should.not.exist(resolve.master);
 					resolve.worker.should.equal(worker);
+					configured.should.equal(true);
 					warmed.should.equal(true);
 
 					var hit = util.format('http://localhost:%d/', port);
