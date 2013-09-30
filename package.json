@@ -34,11 +34,10 @@
         "consolidate": "~0.9.1"
     },
     "scripts": {
-        "prestart": "rm -rf ./log; mkdir log",
+        "prestart": "rm -rf ./log; mkdir log; rm -rf ./pids; mkdir pids",
         "start": "node ./examples/cluster-demo.js &",
         "stop": "node ./lib/shutdown.js",
-        "poststop": "rm ./log/*.log; rm ./pids/*.pid",
-        "pretest": "rm -rf ./log; mkdir log",
+        "pretest": "rm -rf ./log; mkdir log; rm -rf ./pids; mkdir pids",
         "test": "./node_modules/mocha/bin/mocha ./test/*-test.js"
     }
 }
