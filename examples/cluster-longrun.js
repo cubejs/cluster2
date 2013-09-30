@@ -17,7 +17,7 @@ listen({
 	'port': 8080,
 	'monPort': 8081,
 	'configureApp': function(app){
-			
+
 		app.engine('dust', cons.dust);
 
 		app.configure(function(){
@@ -82,31 +82,26 @@ listen({
 		return process.pid;
 	});
 
-	if(resolve.master){
+	if(resolve.master){ //this means all workers have been warmed up!
 
-		setTimeout(function(){
+		var request = require('request'),
+		_ = require('underscore');
 
-			var request = require('request'),
-				_ = require('underscore');
+		(function round(){
 
-			(function round(){
+			_.each(_.range(0, 20), function(ith){
 
-				_.each(_.range(0, 20), function(ith){
-
-					request.get('http://localhost:8080', function(err, response, body){
-						
-						if(err || response.statusCode !== 200){
-							console.log('[err:%j] response:%j and body:%s', err, response, body);
-						}
-					});
+				request.get('http://localhost:8080', function(err, response, body){
+					
+					if(err || response.statusCode !== 200){
+						console.log('[err:%j] response:%j and body:%s', err, response, body);
+					}
 				});
+			});
 
-				setTimeout(round, 1000);
+			setTimeout(round, 1000);
 
-			})();
-
-
-		}, 3000);
+		})();
 	}
 })
 .otherwise(function(error){
