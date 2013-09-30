@@ -38,6 +38,7 @@ listen({
 			
 		});
 
+		return app;
 	},
 	'debug': {
 		'webPort': 9092,

@@ -22,11 +22,12 @@ listen({
 	'port': 9090, //express app listening port
 	'monPort': 9091, //monitoring app listening port
   'configureApp': function(app){
-    //register your routes, middlewares to the app
+    //register your routes, middlewares to the app, must return value or promise
+    return app;
   },
   'warmUp': function(){
-    //warm up your application
-    return true;//or a promise to be resolved after warm up is done
+    //warm up your application, must return value or promise
+    return true;
   }
 	'debug': { //node-inspector integration
 		'webPort': 9092, //node-inspector web listening port

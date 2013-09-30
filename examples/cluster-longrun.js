@@ -62,6 +62,7 @@ listen({
 		app.locals.inspect = util.inspect;
 		app.get('/', routes.index);
 
+		return app;
 	},
 	'debug': {
 		'webPort': 8082,
