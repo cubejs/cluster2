@@ -368,6 +368,19 @@ describe('utils', function(){
 
 	});
 
+	describe('#ls', function(){
+
+		it('should list all the deps', function(done){
+
+			utils.npmls.then(function(deps){
+
+				done();
+
+			}, done);
+		});
+
+	});
+
 	after(function(done){
 
 		var rmPatterns = [
