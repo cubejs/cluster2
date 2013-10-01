@@ -23,6 +23,7 @@ function knock(port, path, assertions){
 			deferred.resolve(null);
 		}
 		catch(e){
+			console.trace(e);
 			deferred.reject(e);
 		}
 	});
@@ -48,6 +49,15 @@ describe('ecv', function(){
 				app = express(),
 				server = http.createServer(app),
 				emitter = new EventEmitter();
+
+			emitter.to = function(targets){
+
+				return {
+					'emit': function(){
+						emitter.emit.apply(emitter, arguments);
+					}
+				};
+			};
 
 			ecv.enable(app, {
 				'root': '/ecv',
@@ -109,6 +119,15 @@ describe('ecv', function(){
 				server = http.createServer(app),
 				emitter = new EventEmitter();
 
+			emitter.to = function(targets){
+
+				return {
+					'emit': function(){
+						emitter.emit.apply(emitter, arguments);
+					}
+				};
+			};
+
 			ecv.enable(app, {
 				'root': '/ecv',
 				'markUp': '/ecv/markUp',
@@ -134,11 +153,12 @@ describe('ecv', function(){
 						var expectMarkUpAlert = when.defer();
 
 						emitter.once('markUp', function(target){
+							console.log('[markUp] %j', target);
 							expectMarkUpAlert.resolve(target);
 						});
 
-						when.join(knock(port, '/ecv/markUp'), timeout(1000, expectMarkUpAlert.promise)).then(function(){
-
+						when.join(knock(port, '/ecv/markUp'), timeout(2000, expectMarkUpAlert.promise)).then(function(){
+							console.log('[marked up]');
 							knock(port, '/ecv', function(error, response, body){
 								
 								should.not.exist(error);
@@ -153,7 +173,7 @@ describe('ecv', function(){
 									expectMarkDownAlert.resolve(target);
 								});
 
-								when.join(knock(port, '/ecv/markDown'), timeout(1000, expectMarkDownAlert.promise)).then(function(){
+								when.join(knock(port, '/ecv/markDown'), timeout(2000, expectMarkDownAlert.promise)).then(function(){
 
 									knock(port, '/ecv', function(error, response, body){
 
@@ -185,6 +205,15 @@ describe('ecv', function(){
 				server = http.createServer(app),
 				emitter = new EventEmitter(),
 				disabled = false;
+
+			emitter.to = function(targets){
+
+				return {
+					'emit': function(){
+						emitter.emit.apply(emitter, arguments);
+					}
+				};
+			};
 
 			pickAvailablePort(8000, 8099).then(function(port){
 				

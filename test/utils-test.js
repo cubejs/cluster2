@@ -232,11 +232,21 @@ describe('utils', function(){
 		it('should let the suicide worker die if it is the 1st one in the queue', function(done){
 
 			var deathQueue = utils.deathQueue,
-				emitter = new (require('events').EventEmitter)(),
-				pid = Math.floor(process.pid * (1 + Math.random())),
+				emitter = new (require('events').EventEmitter)();
+
+			emitter.to = function(targets){
+
+				return {
+					'emit': function(){
+						emitter.emit.apply(emitter, arguments);
+					}
+				};
+			};
+
+			var pid = Math.floor(process.pid * (1 + Math.random())),
 				util = require('util');
 
-			emitter.once('disconnect', function(targets, suicide){
+			emitter.once('disconnect', function(suicide){
 
 				suicide.should.equal(pid);
 				done();
@@ -261,12 +271,22 @@ describe('utils', function(){
 		it('should let us queue the suicide workers one after another', function(done){
 
 			var deathQueue = utils.deathQueue,
-				emitter = new (require('events').EventEmitter)(),
-				pid = Math.floor(process.pid * (1 + Math.random())),
+				emitter = new (require('events').EventEmitter)();
+
+			emitter.to = function(targets){
+
+				return {
+					'emit': function(){
+						emitter.emit.apply(emitter, arguments);
+					}
+				};
+			};
+
+			var pid = Math.floor(process.pid * (1 + Math.random())),
 				util = require('util'),
 				expects = _.map(_.range(0, 10), function(ith){return pid + ith * 2;});
 
-			emitter.on('disconnect', function(targets, suicide){
+			emitter.on('disconnect', function(suicide){
 
 				suicide.should.equal(expects.shift());
 
