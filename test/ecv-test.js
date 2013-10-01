@@ -41,7 +41,7 @@ describe('ecv', function(){
 
 	describe('#enable', function(){
 
-		it('should support control mode via emitter', function(done){
+		it.skip('should support control mode via emitter', function(done){
 
 			this.timeout(3000);
 
@@ -81,27 +81,41 @@ describe('ecv', function(){
 					})
 					.then(function(){
 
-						emitter.emit('warning', {'command':'enable'});
+						knock(port, '/ecv/markUp', function(error, response, body){
 
-						knock(port, '/ecv', function(error, response, body){
-							
 							should.not.exist(error);
 							response.should.be.ok;
-							response.statusCode.should.equal(200);//should have been marked up
+							response.statusCode.should.equal(200);
 						})
 						.then(function(){
 
-							emitter.emit('warning', {'command':'disable'}); 
-
 							knock(port, '/ecv', function(error, response, body){
-
+								
 								should.not.exist(error);
 								response.should.be.ok;
-								response.statusCode.should.equal(500);//marked down again
+								response.statusCode.should.equal(200);//should have been marked up
 							})
-							.then(done, done);//fail due to ecv check incorrect after markdown
+							.then(function(){
 
-						}, done);//fail due to ecv check incorrect after markup
+								knock(port, '/ecv/markDown', function(error, response, body){
+
+									should.not.exist(error);
+									response.should.be.ok;
+									response.statusCode.should.equal(200);//should have been marked down
+
+									knock(port, '/ecv', function(error, response, body){
+
+										should.not.exist(error);
+										response.should.be.ok;
+										response.statusCode.should.equal(500);//marked down again
+									})
+									.then(done, done);//fail due to ecv check incorrect after markdown
+
+								}, done);
+
+							}, done);//fail due to ecv check incorrect after markup
+
+						}, done);
 
 					}, done);//fail due to initial ecv check failed
 
