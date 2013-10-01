@@ -18,8 +18,17 @@ describe('puppet', function(){
 
         it('should create a puppet instance', function(done){
 
-            var emitter = new EventEmitter(),
-                pid = Math.floor(process.pid * (1 + Math.random())),
+            var emitter = new EventEmitter();
+            emitter.to = function(targets){
+
+                return {
+                    'emit': function(){
+                        emitter.emit.apply(emitter, arguments);
+                    }
+                };
+            };
+
+            var pid = Math.floor(process.pid * (1 + Math.random())),
                 logger = getLogger(),
                 master = {
                     'logger': logger,

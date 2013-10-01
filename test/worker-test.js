@@ -30,14 +30,27 @@ describe('worker', function(){
 
 				logger.info('[test] port picked:%d', port);
 
-				var emitter = new EventEmitter(),
-					app = express(),
+				var emitter = new EventEmitter();
+				emitter.to = function(targets){
+
+					return {
+						'emit': function(){
+							emitter.emit.apply(emitter, arguments);
+						}
+					};
+				};
+
+				var app = express(),
+					configured = false,
 					warmed = false,
 					worker = new Worker(process, {
 						'emitter': emitter,
 						'createServer': require('http').createServer,
 						'app': app,
 						'port': port,
+						'configureApp': function(app){
+							configured = true;
+						},
 						'warmUp': function(){
 							warmed = true;
 						},
@@ -88,6 +101,7 @@ describe('worker', function(){
 					resolve.port.should.equal(port);
 					should.not.exist(resolve.master);
 					resolve.worker.should.equal(worker);
+					configured.should.equal(true);
 					warmed.should.equal(true);
 
 					var hit = util.format('http://localhost:%d/', port);
@@ -99,7 +113,7 @@ describe('worker', function(){
 						response.statusCode.should.equal(200);
 
 						//now we'll verify gc
-						emitter.on('gc', function(targets, usage, type){
+						emitter.on('gc', function(usage, type){
 
 							logger.info('[test] gc happended');
 

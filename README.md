@@ -18,22 +18,43 @@ listen({
 
   'noWorkers': 1, //default number of cpu cores
 	'createServer': require('http').createServer,
-	'app': app,
-	'port': 9090,
-	'monPort': 9091,
+	'app': app, //your express app
+	'port': 9090, //express app listening port
+	'monPort': 9091, //monitoring app listening port
+  'configureApp': function(app){
+    //register your routes, middlewares to the app, must return value or promise
+    return app;
+  },
+  'warmUp': function(){
+    //warm up your application, must return value or promise
+    return true;
+  }
 	'debug': { //node-inspector integration
-		'webPort': 9092,
+		'webPort': 9092, //node-inspector web listening port
 		'saveLiveEdit': true
 	},
 	'ecv': {
 	  'mode': 'control',
 	  'root': '/ecv'
-	}
-	'heartbeatInterval': 5000 //heartbeat rate
+	},
+  'cache': {
+    'enable': true, //check cache section
+    'mode': 'standalone' //default creates a standalone worker specific to run as cache manager, otherwise use master to run
+  },
+  'gc': {
+    'monitor': true,  //will reflect the gc (incremental, full) in heartbeat, this conflicts with socket.io somehow
+    'idle-noitification': false, //for performance reason, we'll disable node idle notification to v8 by default
+    'explicit': false //yet impl, meant to expose gc() as a global function
+  },
+	'heartbeatInterval': 5000 //heartbeat interval in MS
 })
 .then(function(resolved){
    //cluster started
    //resolved is an object which embeds server, app, port, etc.
+   //this is quite useful, you must understand that both master and workers will get to here (due to fork)
+   //if it's worker, it means the warmup of that worker process has been finished (and listening already happen of course)
+   //if it's master, it means all of the workers (noWorkers) asked to be created initially have all been warmed up
+   //and implicitly, the ecv if enabled, will return 200 to whoever polls for the status
 })
 .otherwise(function(error){
   //cluster start error
@@ -64,13 +85,16 @@ emitter.removeListener('event', callback);
 emitter.removeListener('event', callbackOnce);
 emitter.removeAllListeners('event');
 
-emitter.emit('event', null, 'arg0', 'arg1');
-//the 'null' value above defaults to the default target of the event
+emitter.emit('event', 'arg0', 'arg1');
 //it varies in master and worker runtime, in master it's the same as saying
-emitter.emit('event', ['self'].concat(_.map(cluster.workers, function(w){return w.process.pid;})), 'arg0', 'arg1');
+emitter.emitTo(['self'].concat(_.map(cluster.workers, function(w){return w.process.pid;})), ['event', 'arg0', 'arg1']);
 //as this indicates, the master's emit target by default is everybody, master itself and all active workers
-//and in worker runtime, the null value is intepreted as worker itself and master
-emitter.emit('event', ['self', 'master'], 'arg0', 'arg1');
+//and in worker runtime, it's intepreted as worker itself and master
+emitter.emitTo(['self', 'master'], ['event', 'arg0', 'arg1']);
+//you don't have to use the different `emitTo` method unless you have a different targets set from the default explained above.
+//but in cause you need, it's also simplified as:
+emitter.to(['master']).emit('event', 'arg0', 'arg1');
+//use to method to scope the target differently, the value should be an array of pids, or 'master', or 'self'
 
 ```
 
@@ -116,11 +140,150 @@ Ever imagined debugging to be simpler? Here's the good news, we've carefully des
 With integration with ECV, worker lifecycle management, node-inspector, and bootstrap + websocket debug app (middleware to be exact). You're now
 able to debug any running worker a few clicks away, same applies for a newly forked one.
 
+`http://localhost:9091/debug` (change host, port to your configured values) `debug` route is what we added as a middleware to the monitor app given. It presents an insight of the running workers, their health; in addition, the cluster cache status. You could hover on a worker pid to request a node-inspector based debug, the control flow is described at `__dirname/lib/public/images/live-debugging.png`.
+
+The experience is designed to be the same across different environments, whether dev, qa, or even production, the same debugging flow and mechanism would make diagnostics much more effective.
+
+## deps
+
+This is a preserved feature of cluster2, it simply list the npm ls result and give it under `http://localhost:9091/deps` route, which looks like the following.
+
+```javascript
+{
+  "name": "cluster2",
+  "version": "0.5.0",
+  "dependencies": {
+    "underscore": {
+      "version": "1.4.4",
+      "from": "underscore@~1.4.4"
+    },
+    "usage": {
+      "version": "0.3.8",
+      "from": "usage@~0.3.8",
+      "dependencies": {
+        "bindings": {
+          "version": "1.1.1",
+          "from": "bindings@1.x.x"
+        }
+      }
+    },
+    "when": {
+      "version": "2.3.0",
+      "from": "when@~2.3.0"
+    },
+    "graceful-fs": {
+      "version": "2.0.1",
+      "from": "graceful-fs@~2.0.0"
+    },
+    "gc-stats": {
+      "version": "0.0.1",
+      "from": "gc-stats@~0.0.1",
+      "resolved": "https://registry.npmjs.org/gc-stats/-/gc-stats-0.0.1.tgz"
+    },
+    "bignumber.js": {
+      "version": "1.1.1",
+      "from": "bignumber.js@~1.1.1"
+    }
+    //... more dependencies not shown
+  }
+}
+```
+
 ## robustness
 
 This is sth we learned given the real experience of a node.js application, workers do get slower, whether that's memory leak, or GC becomes worse, it's easier to prepare
 than to avoid. So as a step forward from the previous 'death watch', we're now proactively collecting performance statistics and to decide it a worker could be ended 
-before it gets slow.
+before it gets slow. You could see the simple heurstic we put at `__dirname/lib/utils.js` # `assertOld` function. You can always overwrite this based on your application's characteristics, but this gives a good starting point based on heartbeat collected stats.
+
+```javascript
+
+var peaks = {},
+  MAX_LIFE = 3600 * 24 * 3;//3 days
+
+exports.assertOld = function assertOld(heartbeat){
+
+    var pid = heartbeat.pid,
+      uptime = heartbeat.uptime,
+        currTPS = heartbeat.tps || (heartbeat.transactions * 1000 / heartbeat.cycle);
+
+    if(uptime > MAX_LIFE){ //a conservative check
+      return true;
+    }
+
+    if(currTPS <= 2){//intelligent heuristic, TPS too low, no good for sampling as the 1st phase.
+        return false;
+    }
+
+    var peak = peaks[pid] = peaks[pid] || {
+            'tps': currTPS,
+            'cpu': heartbeat.cpu,
+            'memory': heartbeat.memory,
+            'gc': {
+                'incremental': heartbeat.gc.incremental,
+                'full': heartbeat.gc.full
+            }
+        };//remember the peak of each puppet
+
+    if(currTPS >= peak.tps){
+        peak.tps = Math.max(heartbeat.tps, peak.tps);
+        peak.cpu = Math.max(heartbeat.cpu, peak.cpu);
+        peak.memory = Math.max(heartbeat.memory, peak.memory);
+        peak.gc.incremental = Math.max(heartbeat.gc.incremental, peak.gc.incremental);
+        peak.gc.full = Math.max(heartbeat.gc.full, peak.gc.full);
+    }
+    else if(currTPS < peak.tps * 0.9 //10% tps drop
+        && heartbeat.cpu > peak.cpu
+        && heartbeat.memory > peak.memory
+        && heartbeat.gc.incremental > peak.gc.incremental
+        && heartbeat.gc.full >= peak.gc.full){//sorry, current gc.full is usually zero
+        
+        return true;
+    }
+
+    return false;
+};
+```
+
+Apart from the above mentioned proactive collection, we noticed another subtle issue in practice. When a worker is dead, its load will be distributed to the rest of alives certainly, that adds some stress to the alives, but when more than one worker died at the same time, the stress could become problem.
+Therefore, to prevent such from happening when worker is marked to be replaced, we made it a FIFO, further explained in `__dirname/lib/utils` # `deathQueue` function. Its purpose is to guarantee that no more than one worker could commit suicide and be replaced at the same time.
+
+```javascript
+
+var tillPrevDeath = null;
+
+exports.deathQueue = function deathQueue(pid, emitter, success){
+
+  assert.ok(pid);
+  assert.ok(emitter);
+  assert.ok(success);
+
+  var tillDeath = when.defer(),
+    afterDeath = null,
+    die = function(){
+
+      var successor = success();
+
+      //when successor is in place, the old worker could be discontinued finally
+      emitter.once(util.format('worker-%d-listening', successor.process.pid), function(){
+
+        emitter.emit('disconnect', ['master', pid], pid);
+                tillDeath.resolve(pid);
+
+        if(tillPrevDeath === afterDeath){//last of dyingQueue resolved, clean up the dyingQueue
+                    tillPrevDeath = null;
+        }
+      });
+    };
+
+  if(!tillPrevDeath){//1st in the dying queue,
+    afterDeath = tillPrevDeath = timeout(tillDeath.promise, 60000);//1 min
+    die();
+  }
+  else{
+    afterDeath = tillPrevDeath = timeout(tillPrevDeath, 60000).ensure(die);
+  }
+};
+```
 
 ## caching
 
@@ -132,15 +295,11 @@ It's like having a memcached process, only this is node, and you can debug it to
 * **`cache`** 
 
 ```javascript
-require('cluster2/cache').use('cache-name', {
+var cache = require('cluster2/cache').use('cache-name', {
   'persist': true,//default false
   'expire': 60000 //in ms, default 0, meaning no expiration
-})
-.then(function(cache){
-//the cache is the major api cluster application could then interact with
-//the cache values are the same accross the entire worker process
-//'cache-name' is a namespace, #use will create such namespace if yet exists
 });
+
 ```
 * **`keys`**
 
@@ -205,11 +364,11 @@ var cache;
 cache.set('cache-key-1', //key must be string
   'cache-value-loaded-1', //value could be any json object
   {
-    'leaveIfNotNull': false,//default false, which allows set to overwrite existing values, use true for the atomic getAndLoad
+    'leaveIfNotNull': false,//default false, which allows set to overwrite existing values
     'wait': 100
   })
   .then(function(happens){
-  //the happens resolved is a true/false value indicating if the value has been accepted by the cache manager
+    //the happens resolved is a true/false value indicating if the value has been accepted by the cache manager
   })
   .otherwise(function(error){
   
@@ -225,7 +384,7 @@ cache.del('cache-key-1', //key must be string
     'wait': 100//this is a timeout option
   })
   .then(function(value){
-  //the old value deleted
+    //the old value deleted
   });
 ```
 * **`watch`**
