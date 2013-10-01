@@ -5,10 +5,17 @@ var listen = require('../lib/index').listen,
 	express = require('express'),
 	app = express();
 
-app.get('/', function(req, res){
+listen({
+	'noWorkers': 1,
+	'createServer': require('http').createServer,
+	'app': app,
+	'port': 9090,
+	'monPort': 9091,
+	'configureApp': function(app){
+		
+		app.get('/', function(req, res){
 
-	require('../lib/cache').use('demo-cache')
-		.then(function(cache){
+			var cache = require('../lib/cache').use('demo-cache');
 
 			var key = req.query.key,
 				val = req.query.value;
@@ -28,23 +35,22 @@ app.get('/', function(req, res){
 						res.send(util.format('[cache] set:%s to value:%j result:%s', key, val, set), 200);
 					});
 			}
+			
 		});
-});
 
-listen({
-	'noWorkers': 1,
-	'createServer': require('http').createServer,
-	'app': app,
-	'port': 9090,
-	'monPort': 9091,
+		return app;
+	},
 	'debug': {
 		'webPort': 9092,
 		'saveLiveEdit': true
 	},
-	/*'cache': {
+	'cache': {
 		'enable': true,
 		'mode': 'master'
-	},*/
+	},
+	'gc': {
+		'monitor': true
+	},
 	'heartbeatInterval': 5000
 })
 .then(function(resolve){

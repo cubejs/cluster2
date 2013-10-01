@@ -4,8 +4,8 @@
         "name": "Roy Zhou",
         "email": "huzhou@ebay.com"
     }],
-    "name": "cluster3",
-    "version": "0.5.0",
+    "name": "cluster2",
+    "version": "0.5.0-SNAPSHOT",
     "engines": {
         "node": ">= 0.10.0"
     },
@@ -21,19 +21,23 @@
         "socket.io": "~0.9.16",
         "ejs": "~0.8.4",
         "node-inspector": "~0.4.0",
-        "node-gc": "~0.2.0",
-        "bignumber.js": "~1.1.1"
+        "gc-stats": "~0.0.1",
+        "bignumber.js": "~1.1.1",
+        "npm": "~1.3"
     },
     "devDependencies": {
         "mocha": "~1.11.0",
         "should": "~1.2.2",
-        "optimist": "~0.6.0"
+        "optimist": "~0.6.0",
+        "dustjs-linkedin": "~2.0.3",
+        "dustjs-helpers": "~1.1.1",
+        "consolidate": "~0.9.1"
     },
     "scripts": {
-        "prestart": "rm -rf ./log; mkdir log",
-        "start": "node ./examples/cluster-demo.js",
+        "prestart": "rm -rf ./log; mkdir log; rm -rf ./pids; mkdir pids",
+        "start": "node ./examples/cluster-demo.js &",
         "stop": "node ./lib/shutdown.js",
-        "poststop": "rm ./log/*.log; rm ./pids/*.pid",
+        "pretest": "rm -rf ./log; mkdir log; rm -rf ./pids; mkdir pids",
         "test": "./node_modules/mocha/bin/mocha ./test/*-test.js"
     }
 }

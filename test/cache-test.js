@@ -120,31 +120,31 @@ describe('cache', function(){
 				persist = true,
 				expire = 3000;
 
-			require('../lib/cache').use(namespace, {
+			var cache = require('../lib/cache').use(namespace, {
 				'persist': persist,
 				'expire': expire
-			})
-			.then(function(cache){
+			});
 
-				logger.info('[test] cache obtained:%j', cache);
+			logger.info('[test] cache obtained:%j', cache);
 
-				cache.should.be.ok;
-				cache.namespace.should.equal(namespace);
+			cache.should.be.ok;
+			cache.namespace.should.equal(namespace); //test namespace
 
-				var meta = cache.meta();
+			cache.meta().then(function(meta){ //test meta
+				
 				meta.should.be.ok;
 				meta.persist.should.equal(true);
-				
+
 				logger.info('[test] cache queries begin');
 
-				cache.get('key')
+				cache.get('key') //test get without loader
 					.then(function(value){
 
 						logger.info('[test] cache 1st "get" attempt should value:%j', value);
 
 						should.not.exist(value);
 
-						cache.get('key', function(){
+						cache.get('key', function(){ //test get with loader
 
 							return 'value';
 						})
@@ -153,15 +153,34 @@ describe('cache', function(){
 							logger.info('[test] cache 2nd "get" with loader attempt should succeed given value:%j', value);
 
 							value.should.equal('value');
-                            
-                            var stat = cache.stat();
-                            stat.should.be.ok;
-                            stat.hit.should.equal(0);
-                            stat.miss.should.equal(2);
-                            stat.load.should.equal(1);
-                            stat.error.should.equal(0);
 
-							done();
+							cache.keys().then(function(keys){ //test get keys
+
+								keys.should.be.ok;
+								keys.should.include('key');
+	                        
+		                        cache.stat().then(function(stat){ //test stats
+
+			                        stat.should.be.ok;
+			                        stat.hit.should.equal(0);
+			                        stat.miss.should.equal(2);
+			                        stat.load.should.equal(1);
+			                        stat.error.should.equal(0);
+
+			                        cache.watch('key', function(v, k){ //test watch
+									
+										done();
+
+			                        })
+			                        .then(function(){
+
+			                        	cache.set('key', 'value-updated'); //test set & watch
+
+			                        });
+
+								}, done);
+
+							});
 
 						}, done);
 

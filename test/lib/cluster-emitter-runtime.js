@@ -66,7 +66,7 @@ if(cluster.isMaster){
 			emitter.once(event, function(){
 
 				logger.info('[master] received event:%s, and will echo:%s with pid:%d', event, echo, process.pid);
-				emitter.emit(echo, ['self'], process.pid);
+				emitter.to(['self']).emit(echo, process.pid);
 			});
 
 			emitter.on(echo, function(pid){
@@ -80,7 +80,7 @@ if(cluster.isMaster){
 			});
 
 			logger.info('[master] emitting event:%s to all', event);
-			emitter.emit(event, null/*target*/, echo);
+			emitter.emit(event, echo);
 
 			setTimeout(function(){
 
@@ -107,11 +107,11 @@ else{
 		emitter.once(eventToMe, function(){
 
 			logger.info('[worker:%d] received:%s and will emit:%s', process.pid, eventToMe, echo);
-			emitter.emit(echo, null, process.pid);
+			emitter.emit(echo, process.pid);
 			logger.info('[worker:%d] emitted:%s with payload:%s', process.pid, echo, process.pid);
 		});
 
-		emitter.emit(eventToMe, ['self']);
+		emitter.to(['self']).emit(eventToMe);
 		logger.info('[worker:%d] emitted:%s', process.pid, eventToMe);
 	});
 

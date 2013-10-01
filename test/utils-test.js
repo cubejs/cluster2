@@ -232,11 +232,21 @@ describe('utils', function(){
 		it('should let the suicide worker die if it is the 1st one in the queue', function(done){
 
 			var deathQueue = utils.deathQueue,
-				emitter = new (require('events').EventEmitter)(),
-				pid = Math.floor(process.pid * (1 + Math.random())),
+				emitter = new (require('events').EventEmitter)();
+
+			emitter.to = function(targets){
+
+				return {
+					'emit': function(){
+						emitter.emit.apply(emitter, arguments);
+					}
+				};
+			};
+
+			var pid = Math.floor(process.pid * (1 + Math.random())),
 				util = require('util');
 
-			emitter.once('disconnect', function(targets, suicide){
+			emitter.once('disconnect', function(suicide){
 
 				suicide.should.equal(pid);
 				done();
@@ -261,12 +271,22 @@ describe('utils', function(){
 		it('should let us queue the suicide workers one after another', function(done){
 
 			var deathQueue = utils.deathQueue,
-				emitter = new (require('events').EventEmitter)(),
-				pid = Math.floor(process.pid * (1 + Math.random())),
+				emitter = new (require('events').EventEmitter)();
+
+			emitter.to = function(targets){
+
+				return {
+					'emit': function(){
+						emitter.emit.apply(emitter, arguments);
+					}
+				};
+			};
+
+			var pid = Math.floor(process.pid * (1 + Math.random())),
 				util = require('util'),
 				expects = _.map(_.range(0, 10), function(ith){return pid + ith * 2;});
 
-			emitter.on('disconnect', function(targets, suicide){
+			emitter.on('disconnect', function(suicide){
 
 				suicide.should.equal(expects.shift());
 
@@ -297,6 +317,86 @@ describe('utils', function(){
 					}
 				});
 			});
+		});
+
+	});
+
+	describe('#gcstats', function(){
+
+		//NOTE, we were using node-gc module, and it couldn't work together with express, socket.io, request etc.
+		//we received an error 'Bus error: 10' and node program exit abnormally
+		//we switched memwatch and nodefly-gcinfo modules but they were not emitting gc events at all
+		//now we're using gc-stats module, which is very rough, the index.js doesn't seem to be a correct one
+		//but the binary works, we wrap it in our utils and leverage only the binary part of it.
+		it('should collect gc stats', function(done){
+
+			this.timeout(30000);
+
+			var gc = utils.gcstats,
+				min = 1,
+				bigger = [0], 
+				nextGrowth;;
+
+			gc.on('stats', function onStats(stats){
+
+  				console.log('%d %j', process.pid, stats);
+
+				stats.should.be.ok;
+				/*{
+					"pause":5181203,
+					"pauseMS":5,
+					"before":{
+						"totalHeapSize":17603072,
+						"totalHeapExecutableSize":3145728,
+						"usedHeapSize":10838176,
+						"heapSizeLimit":1535115264
+					},
+					"after":{
+						"totalHeapSize":18635008,
+						"totalHeapExecutableSize":3145728,
+						"usedHeapSize":8770888,
+						"heapSizeLimit":1535115264
+					},
+					"diff":{
+						"totalHeapSize":1031936,
+						"totalHeapExecutableSize":0,
+						"usedHeapSize":-2067288,
+						"heapSizeLimit":0
+					}
+				}*/
+				stats.pause.should.be.ok;
+
+				if((min -= 1) <= 0){
+
+					clearTimeout(nextGrowth);
+
+					gc.removeListener('stats', onStats);
+
+					done();
+				}
+			});
+
+			(function grow(){
+
+				bigger.push(bigger);
+				
+				nextGrowth = setTimeout(grow, 1);
+
+			})();
+
+		});
+
+	});
+
+	describe('#ls', function(){
+
+		it('should list all the deps', function(done){
+
+			utils.npmls.then(function(deps){
+
+				done();
+
+			}, done);
 		});
 
 	});
