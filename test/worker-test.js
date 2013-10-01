@@ -76,7 +76,7 @@ describe('worker', function(){
 				worker.isWorker.should.equal(true);
 				worker.pid.should.equal(process.pid);
 				worker.debug.should.not.be.ok;
-				worker.liveConnections.should.equal(0);
+				worker.aliveConnections.should.equal(0);
 				worker.totalConnections.should.equal(0);
 				worker.status.should.be.ok;
 				worker.gc.should.be.ok;

@@ -6,12 +6,9 @@ var listen = require('../lib/index').listen,
 	app = express();
 
 listen({
-	'noWorkers': 1,
 	'createServer': require('http').createServer,
 	'app': app,
-	'port': 9090,
-	'monPort': 9091,
-	'configureApp': function(app){
+	'configureApp': function(){
 		
 		app.get('/', function(req, res){
 
@@ -44,14 +41,9 @@ listen({
 		'webPort': 9092,
 		'saveLiveEdit': true
 	},
-	'cache': {
-		'enable': true,
-		'mode': 'master'
-	},
 	'gc': {
 		'monitor': true
-	},
-	'heartbeatInterval': 5000
+	}
 })
 .then(function(resolve){
 
