@@ -21,9 +21,9 @@ var spawn = require('child_process').spawn,
     fs = require('fs'),
     os = require('os'),
     EventEmitter = require('events').EventEmitter,
+    when = require('when'),
     util = require('util'),
-    _ = require('underscore'),
-    Q = require('q');
+    _ = require('underscore');
 
 var debug = false;
 function log() {
@@ -572,7 +572,7 @@ function waitForStart(child, emitter, test, current, max) {
 
 function waitForStart(child, emitter, test) {
 
-    var deferred = Q.defer();
+    var deferred = when.defer();
     var timeOut = setTimeout(function(){
         deferred.reject(new Error("timeout"));
     }, 3000);
@@ -592,11 +592,10 @@ function waitForStart(child, emitter, test) {
     deferred.promise.then(function(){
         emitter.emit("started");
     })
-    .fail(function(error){
+    .otherwise(function(error){
         test.ok(false, error);
         test.done();
-    })
-    .done();
+    });
 }
 
 function waitForStop(emitter, test, current, max) {

@@ -23,7 +23,7 @@ var spawn = require('child_process').spawn,
     EventEmitter = require('events').EventEmitter,
     util = require('util'),
     _ = require('underscore'),
-    Q = require('q'),
+    when = require('when'),
     WebSocketClient = require("websocket").client;
 
 var debug = false;
@@ -186,7 +186,7 @@ function shutdown(emitter) {
 
 function waitForStart(child, emitter, test) {
 
-    var deferred = Q.defer();
+    var deferred = when.defer();
     var timeOut = setTimeout(function(){
         deferred.reject(new Error("timeout"));
     }, 3000);
@@ -204,10 +204,10 @@ function waitForStart(child, emitter, test) {
     deferred.promise.then(function(){
         emitter.emit("started");
     })
-        .fail(function(error){
-            test.ok(false, error);
-            test.done();
-        });
+    .otherwise(function(error){
+        test.ok(false, error);
+        test.done();
+    });
 }
 
 function waitForStop(emitter, test, current, max) {
