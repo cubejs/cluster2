@@ -51,25 +51,25 @@ c.on('died', function(pid) {
 });
 
 c.on('forked', function(pid) {
-    console.log('Worker ' + pid + ' forked');
+    //console.log('Worker ' + pid + ' forked');
 });
 
 c.on('listening', function(pid){
-    console.log('Worker ' + pid + ' listening');
+    //console.log('Worker ' + pid + ' listening');
     process.send({
         ready: true
     });
 });
 
 c.on('SIGKILL', function() {
-    console.log('Got SIGKILL');
+    //console.log('Got SIGKILL');
     process.send({
         'signal':'SIGKILL'
     });
 });
 
 c.on('SIGTERM', function(event) {
-    console.log('Got SIGTERM - shutting down');
+    //console.log('Got SIGTERM - shutting down');
     console.log(event);
     process.send({
         'signal':'SIGTERM'
@@ -77,7 +77,7 @@ c.on('SIGTERM', function(event) {
 });
 
 c.on('SIGINT', function() {
-    console.log('Got SIGINT');
+    //console.log('Got SIGINT');
     process.send({
         'signal':'SIGINT'
     });
@@ -85,7 +85,7 @@ c.on('SIGINT', function() {
 
 c.on('heartbeat', function(heartbeat){
 
-    console.log('Got HEARTBEAT');
+    //console.log('Got HEARTBEAT');
     heartbeat.type = 'heartbeat';
     process.send(heartbeat);
 });

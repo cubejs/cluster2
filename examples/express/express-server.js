@@ -46,6 +46,8 @@ var c = new Cluster({
     port: 3000,
     cluster: true,
     timeout: 500,
+    noWorkers: 1,
+    connThreshold: 4,
     ecv: {
         path: '/ecv', // Send GET to this for a heartbeat
         control: true, // send POST to /ecv/disable to disable the heartbeat, and to /ecv/enable to enable again
