@@ -46,6 +46,7 @@ listen({
     'idle-noitification': false, //for performance reason, we'll disable node idle notification to v8 by default
     'explicit': false //yet impl, meant to expose gc() as a global function
   },
+  	'maxAge': 3600, //worker's max life in seconds, default is 3 days
 	'heartbeatInterval': 5000 //heartbeat interval in MS
 })
 .then(function(resolved){
@@ -197,51 +198,76 @@ before it gets slow. You could see the simple heurstic we put at `__dirname/lib/
 
 ```javascript
 
-var peaks = {},
-  MAX_LIFE = 3600 * 24 * 3;//3 days
+exports.assertOld = function assertOld(maxAge){
 
-exports.assertOld = function assertOld(heartbeat){
+  maxAge = maxAge || 3600 * 24 * 3;//3 days
+
+  return function(heartbeat){
+  
+    return heartbeat.uptime >= maxAge;
+  };
+};
+
+exports.assertBadGC = function assertBadGC(){
+
+  var peaks = {};
+
+  return function(heartbeat){
 
     var pid = heartbeat.pid,
-      uptime = heartbeat.uptime,
-        currTPS = heartbeat.tps || (heartbeat.transactions * 1000 / heartbeat.cycle);
+        uptime = heartbeat.uptime,
+          currTPS = heartbeat.tps || (heartbeat.transactions * 1000 / heartbeat.cycle);
 
-    if(uptime > MAX_LIFE){ //a conservative check
-      return true;
-    }
+      if(currTPS <= 2){//intelligent heuristic, TPS too low, no good for sampling as the 1st phase.
+          return false;
+      }
 
-    if(currTPS <= 2){//intelligent heuristic, TPS too low, no good for sampling as the 1st phase.
-        return false;
-    }
+      var peak = peaks[pid] = peaks[pid] || {
+              'tps': currTPS,
+              'cpu': heartbeat.cpu,
+              'memory': heartbeat.memory,
+              'gc': {
+                  'incremental': heartbeat.gc.incremental,
+                  'full': heartbeat.gc.full
+              }
+          };//remember the peak of each puppet
 
-    var peak = peaks[pid] = peaks[pid] || {
-            'tps': currTPS,
-            'cpu': heartbeat.cpu,
-            'memory': heartbeat.memory,
-            'gc': {
-                'incremental': heartbeat.gc.incremental,
-                'full': heartbeat.gc.full
-            }
-        };//remember the peak of each puppet
+      if(currTPS >= peak.tps){
+          peak.tps = Math.max(heartbeat.tps, peak.tps);
+          peak.cpu = Math.max(heartbeat.cpu, peak.cpu);
+          peak.memory = Math.max(heartbeat.memory, peak.memory);
+          peak.gc.incremental = Math.max(heartbeat.gc.incremental, peak.gc.incremental);
+          peak.gc.full = Math.max(heartbeat.gc.full, peak.gc.full);
+      }
+      else if(currTPS < peak.tps * 0.9 //10% tps drop
+          && heartbeat.cpu > peak.cpu
+          && heartbeat.memory > peak.memory
+          && heartbeat.gc.incremental > peak.gc.incremental
+          && heartbeat.gc.full >= peak.gc.full){//sorry, current gc.full is usually zero
+          
+          return true;
+      }
 
-    if(currTPS >= peak.tps){
-        peak.tps = Math.max(heartbeat.tps, peak.tps);
-        peak.cpu = Math.max(heartbeat.cpu, peak.cpu);
-        peak.memory = Math.max(heartbeat.memory, peak.memory);
-        peak.gc.incremental = Math.max(heartbeat.gc.incremental, peak.gc.incremental);
-        peak.gc.full = Math.max(heartbeat.gc.full, peak.gc.full);
-    }
-    else if(currTPS < peak.tps * 0.9 //10% tps drop
-        && heartbeat.cpu > peak.cpu
-        && heartbeat.memory > peak.memory
-        && heartbeat.gc.incremental > peak.gc.incremental
-        && heartbeat.gc.full >= peak.gc.full){//sorry, current gc.full is usually zero
-        
-        return true;
-    }
-
-    return false;
+      return false;
+  }
 };
+
+{
+  'shouldKill': options.shouldKill || (function(){ //default assertions for killing a worker
+
+    var assertions = [assertOld(_this.maxAge), assertBadGC()];
+
+    return function(heartbeat){
+
+      return _.some(assertions, function(a){
+
+        return a(heartbeat);
+      });
+    };
+    
+  })()
+}
+
 ```
 
 Apart from the above mentioned proactive collection, we noticed another subtle issue in practice. When a worker is dead, its load will be distributed to the rest of alives certainly, that adds some stress to the alives, but when more than one worker died at the same time, the stress could become problem.
@@ -249,40 +275,49 @@ Therefore, to prevent such from happening when worker is marked to be replaced, 
 
 ```javascript
 
-var tillPrevDeath = null;
+exports.deathQueue = (function(){
 
-exports.deathQueue = function deathQueue(pid, emitter, success){
+  var tillPrevDeath = null;
 
-  assert.ok(pid);
-  assert.ok(emitter);
-  assert.ok(success);
+  return function deathQueue(pid, emitter, success){
 
-  var tillDeath = when.defer(),
-    afterDeath = null,
-    die = function(){
+    assert.ok(pid);
+    assert.ok(emitter);
+    assert.ok(success);
 
-      var successor = success();
+    var tillDeath = when.defer(),
+      afterDeath = null,
+      die = function(){
 
-      //when successor is in place, the old worker could be discontinued finally
-      emitter.once(util.format('worker-%d-listening', successor.process.pid), function(){
+        var successor = success();
 
-        emitter.emit('disconnect', ['master', pid], pid);
-                tillDeath.resolve(pid);
+        //when successor is in place, the old worker could be discontinued finally
+        emitter.once(util.format('worker-%d-listening', successor.process.pid), function(){
 
-        if(tillPrevDeath === afterDeath){//last of dyingQueue resolved, clean up the dyingQueue
-                    tillPrevDeath = null;
-        }
-      });
-    };
+          emitter.to(['master', pid]).emit('disconnect', pid);
 
-  if(!tillPrevDeath){//1st in the dying queue,
-    afterDeath = tillPrevDeath = timeout(tillDeath.promise, 60000);//1 min
-    die();
-  }
-  else{
-    afterDeath = tillPrevDeath = timeout(tillPrevDeath, 60000).ensure(die);
-  }
-};
+          emitter.once(util.format('worker-%d-died', pid), function(){
+
+                    tillDeath.resolve(pid);
+
+            if(tillPrevDeath === afterDeath){//last of dyingQueue resolved, clean up the dyingQueue
+                        tillPrevDeath = null;
+            }
+                });
+        });
+      };
+
+    if(!tillPrevDeath){//1st in the dying queue,
+      afterDeath = tillPrevDeath = timeout(60000, tillDeath.promise);//1 min
+      die();
+    }
+    else{
+      afterDeath = tillPrevDeath = timeout(60000, tillPrevDeath.ensure(die));
+    }
+  };
+  
+})();
+
 ```
 
 ## caching
@@ -336,7 +371,9 @@ listen({
 	'heartbeatInterval': 5000 //heartbeat rate
 })
 ```
-* **`get`**
+* **`get`** 
+* with the loader, if concurrent `get` happens across the workers in a cluster, only one will be allowed to **load** while the rest will be in fact `watch` till that one finishes loading.
+* this will reduce the stress upon the backend services which loads exact same data nicely
 
 ```javascript
 var cache;
