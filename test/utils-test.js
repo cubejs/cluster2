@@ -249,6 +249,11 @@ describe('utils', function(){
 			emitter.once('disconnect', function(suicide){
 
 				suicide.should.equal(pid);
+
+				process.nextTick(function(){
+					emitter.emit(util.format('worker-%d-died', suicide));
+				});
+
 				done();
 			});
 
@@ -289,6 +294,10 @@ describe('utils', function(){
 			emitter.on('disconnect', function(suicide){
 
 				suicide.should.equal(expects.shift());
+
+				process.nextTick(function(){
+					emitter.emit(util.format('worker-%d-died', suicide));
+				});
 
 				if(!expects.length){
 					done();
