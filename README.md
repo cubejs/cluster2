@@ -46,6 +46,7 @@ listen({
     'idle-noitification': false, //for performance reason, we'll disable node idle notification to v8 by default
     'explicit': false //yet impl, meant to expose gc() as a global function
   },
+  	'maxAge': 3600, //worker's max life in seconds, default is 3 days
 	'heartbeatInterval': 5000 //heartbeat interval in MS
 })
 .then(function(resolved){
@@ -370,7 +371,9 @@ listen({
 	'heartbeatInterval': 5000 //heartbeat rate
 })
 ```
-* **`get`**
+* **`get`** 
+* with the loader, if concurrent `get` happens across the workers in a cluster, only one will be allowed to **load** while the rest will be in fact `watch` till that one finishes loading.
+* this will reduce the stress upon the backend services which loads exact same data nicely
 
 ```javascript
 var cache;
