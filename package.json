@@ -38,6 +38,6 @@
         "start": "node ./examples/cluster-demo.js --port=9090 --monPort=9091 --noWorkers=1 --cache.enable --heartbeat.interval=5000 &",
         "stop": "node ./lib/shutdown.js",
         "pretest": "rm -rf ./log; mkdir log; rm -rf ./pids; mkdir pids",
-        "test": "./node_modules/mocha/bin/mocha ./test/*-test.js"
+        "test": "mocha --ui bdd --timeout 10s --reporter spec  ./test/*-test.js"
     }
 }
