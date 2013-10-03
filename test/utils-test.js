@@ -139,14 +139,14 @@ describe('utils', function(){
 			done();
 		});
 	});
-    
-    describe('#assertOld', function(){
+
+	describe('#assertOld', function(){
         
         it('should use the heuristic to determine when gc is hurting tps', function(done){
         
             //whenever tps grow up, whether or not other metrics goes up/down assertion should be false.
             var pid = Math.floor(process.pid * (1 + Math.random())),
-                assertOld = utils.assertOld;
+                assertOld = utils.assertOld(0);//0 seconds is old
             
             _.each(_.range(0, 1000), function(ith){
             
@@ -164,13 +164,39 @@ describe('utils', function(){
             
             done();
         });
+    });
+    
+    describe('#assertBadGC', function(){
+        
+        it('should use the heuristic to determine when gc is hurting tps', function(done){
+        
+            //whenever tps grow up, whether or not other metrics goes up/down assertion should be false.
+            var pid = Math.floor(process.pid * (1 + Math.random())),
+                assertBadGC = utils.assertBadGC();
+            
+            _.each(_.range(0, 1000), function(ith){
+            
+                assertBadGC({
+                    'pid': pid,
+                    'tps': ith,
+                    'cpu': ith,
+                    'memory': ith,
+                    'gc': {
+                        'incremental': ith,
+                        'full': ith
+                    }
+                }).should.equal(false);
+            });
+            
+            done();
+        });
         
         it('should assert true whenever a degradation of more than 10% happens', function(done){
         
             var pid = Math.floor(process.pid * (1 + Math.random())),
-                assertOld = utils.assertOld;
+                assertBadGC = utils.assertBadGC();
             
-            assertOld({
+            assertBadGC({
                 'pid': pid,
                 'tps': 50,
                 'cpu': 50,
@@ -181,7 +207,7 @@ describe('utils', function(){
                 }
             }).should.equal(false);
             
-            assertOld({
+            assertBadGC({
                 'pid': pid,
                 'tps': 40,//over 10%
                 'cpu': 55,//higher
@@ -198,9 +224,9 @@ describe('utils', function(){
         it('should give 10% margin for tolerance', function(done){
             
             var pid = Math.floor(process.pid * (1 + Math.random())),
-                assertOld = utils.assertOld;
+                assertBadGC = utils.assertBadGC();
             
-            assertOld({
+            assertBadGC({
                 'pid': pid,
                 'tps': 50,
                 'cpu': 50,
@@ -211,7 +237,7 @@ describe('utils', function(){
                 }
             }).should.equal(false);
             
-            assertOld({
+            assertBadGC({
                 'pid': pid,
                 'tps': 48,//less than 10%
                 'cpu': 55,//higher
