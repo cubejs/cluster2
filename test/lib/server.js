@@ -85,7 +85,7 @@ c.on('SIGINT', function() {
 
 c.on('heartbeat', function(heartbeat){
 
-    //console.log('Got HEARTBEAT');
+    //console.log('Got HEARTBEAT:%j', heartbeat);
     heartbeat.type = 'heartbeat';
     process.send(heartbeat);
 });
