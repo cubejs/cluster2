@@ -269,6 +269,7 @@ module.exports = {
         });
 
         var respCount = 0;
+
         emitter.on('started', function () {
             for(var i = 0; i < 2000; i++) {
                 request(util.format('http://localhost:%d', port), function (error, response, body) {
@@ -586,8 +587,11 @@ function waitForStart(child, emitter, test) {
     var handler = function(message){
         if(message.ready){
             clearTimeout(timeOut);
-            deferred.resolve();
             child.removeListener("message", handler);
+
+            setTimeout(function(){
+                deferred.resolve(message);
+            }, 2000);
         }
         if(message.type === 'heartbeat'){
             emitter.emit('heartbeat', message);
@@ -595,13 +599,14 @@ function waitForStart(child, emitter, test) {
     };
     child.on("message", handler);
 
-    deferred.promise.then(function(){
-        emitter.emit("started");
-    })
-    .otherwise(function(error){
-        test.ok(false, error);
-        test.done();
-    });
+    deferred.promise
+        .then(function(){
+            emitter.emit("started");
+        })
+        .otherwise(function(error){
+            test.ok(false, error);
+            test.done();
+        });
 }
 
 function waitForStop(emitter, test, current, max) {
