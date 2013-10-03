@@ -23,7 +23,8 @@ var spawn = require('child_process').spawn,
     EventEmitter = require('events').EventEmitter,
     when = require('when'),
     util = require('util'),
-    _ = require('underscore');
+    _ = require('underscore'),
+    harbor = require('harbor')(3000, 5000);
 
 var debug = false;
 function log() {
@@ -31,32 +32,26 @@ function log() {
         console.log.apply(null, (arguments || []).join(''));
     }
 }
-var port = 3000,
+var test = 't',
+    ith = 0,
+    port = 3000,
     monPort = 10000 - port;
 
 module.exports = {
 
     setUp: function (callback) {
-        //to ensure that occupying ports won't cause all test cases to fail
-        fs.exists("./ports", function(exists){
-            if(!exists){
-                fs.writeFileSync("./ports", port);
-            }
-            fs.readFile("./ports",
-                function(err, data){
-                    port = parseInt(data, 10) + 1;
-                    if(port >= 5000){
-                        port = 3000;
-                    }
-                    monPort = 10000 - port;
-                    fs.writeFile("./ports", "" + port, {
-                            encoding : "utf8"
-                        }, 
-                        function(){
-                            callback();
-                        });
-                });
-        });
+       
+       harbor.claim(test + (ith += 1), function(err, p){
+
+            port = p;
+
+            harbor.claim(test + (ith += 1), function(err, p){
+
+                monPort = p;
+
+                callback();
+            });
+       });
     },
 
     'start and then stop': function(test) {
