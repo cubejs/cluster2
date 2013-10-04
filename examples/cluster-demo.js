@@ -10,6 +10,8 @@ listen({
 	'app': app,
 	'configureApp': function(){
 		
+		//by the time, user application gets here, master already started, cache service started, caching is ready to be used.
+
 		app.get('/', function(req, res){
 
 			var cache = require('../lib/cache').use('demo-cache');
@@ -35,7 +37,7 @@ listen({
 			
 		});
 
-		return app;
+		return app;//in the end, the configured application (with middlewares, routes registered) should be returned
 	},
 	'debug': {
 		'webPort': 9092,
@@ -48,6 +50,7 @@ listen({
 .then(function(resolve){
 
 	require('../lib/status').register('worker', function(){
+		
 		return process.pid;
 	});
 })
