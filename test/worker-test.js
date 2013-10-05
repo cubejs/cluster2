@@ -26,7 +26,7 @@ describe('worker', function(){
 
 			var logger = process.getLogger();
 
-			pickAvailablePort(8000, 8099).then(function(port){
+			pickAvailablePort(7000, 7999).then(function(port){
 
 				logger.info('[test] port picked:%d', port);
 
