@@ -133,16 +133,18 @@ describe('cluster-status', function(){
 	//worker should see components registered by itself
 	//master should see components registered by itself and all of its workers
 
-	describe.skip('cluster-status', function(){
+	describe('cluster-status', function(){
 
 		it('should work in cluster mode', function(done){
 
-			this.timeout(3000);
+			this.timeout(5000);
 
 			var token = 't-' + Date.now(),
 				clusterRuntime = fork(require.resolve('./lib/cluster-status-runtime'), ['--token=' + token]);
 			
-			clusterRuntime.on('message', function(msg){
+			clusterRuntime.once('message', function(msg){
+
+				console.log('[test] message:%j, exit:%j', msg, msg.exit);
 
 				done(msg.exit);
 

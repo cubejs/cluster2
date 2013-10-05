@@ -7,7 +7,7 @@ var should = require('should'),
 	request = require('request'),
 	EventEmitter = require('events').EventEmitter,
     getLogger = require('../lib/utils').getLogger,
-    pickAvailablePort = require('../lib/utils').pickAvailablePort;
+    pickAvailablePorts = require('../lib/utils').pickAvailablePorts;
 
 describe('master', function(){
 
@@ -24,9 +24,9 @@ describe('master', function(){
 			var logger = process.getLogger(),
 				Master = require('../lib/master').Master;
 
-			pickAvailablePort(8000, 8099).then(function(port){
+			pickAvailablePorts(7000, 7999, 4).then(function(ports){
 
-				logger.info('[test] port picked:%d', port);
+				logger.info('[test] ports picked:%j', ports);
 
 				var emitter = new EventEmitter(),
 					app = express(),
@@ -37,12 +37,12 @@ describe('master', function(){
 							return monApp;
 						},
 						'monApp': app,
-						'monPort': port,
-						'port': port + 1,
+						'monPort': ports[0],
+						'port': ports[1],
 						'noWorkers': 0,
 						'debug': {
-							'debugPort': port + 2,
-							'webPort': port + 3
+							'debugPort': ports[2],
+							'webPort': ports[3]
 						},
 						'cache': {
 
@@ -76,11 +76,11 @@ describe('master', function(){
 					resolve.should.be.ok;
 					resolve.server.should.be.ok;
 					resolve.app.should.equal(app);
-					resolve.port.should.equal(port);
+					resolve.port.should.equal(ports[0]);
 					should.not.exist(resolve.worker);
 					resolve.master.should.equal(master);
 
-					var hit = util.format('http://localhost:%d/', port);
+					var hit = util.format('http://localhost:%d/', ports[0]);
 
 					request.get(hit, function(err, response, body){
 

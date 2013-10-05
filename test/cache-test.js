@@ -11,11 +11,10 @@ describe('cache', function(){
 
 		process.getLogger = getLogger;
 
-		var mgr = require('../lib/cache-mgr'),
-			svr = mgr.createServer(mgr.app);
-
-		svr.listen(mgr.port, mgr.afterServerStarted);
-
+		require('../lib/cache').enable({
+			'enable': true
+		});
+		
 		done();
 	});
 
