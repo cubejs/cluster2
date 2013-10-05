@@ -1,13 +1,14 @@
-cubejs-cluster2
+cluster2
 ===============
 
 This is a completely overhaul, not expected to be backward compatible, but the features should cover the most popular while some changes are on their way:
 
 ## simplification
 
-You'll see that we've simplified the api a great deal, the listen method takes no arguments at all, and all dancing parts could be injected through the construation.
-That's based on the adoption of Promise A+ (when.js). 
-You'll also find redundant features like: multiple app/port support, ecv on workers removed, none cluster mode removed, to keep code clean.
+You'll see that we've simplified the api a great deal, no more cluster class, instance to worry, a single #listen method to take all dancing parts.
+And those configurable pieces mostly have reasonable defaults, and could be easily set from command line arguments. For example, `--port=8080`, `--cache.enable` etc.
+Also we've adopted Promise A+ (when.js). style to replace the callbacks, we like it for the fewer level of nested code, a lot. 
+You'll also find some redundant features like: multiple app/port support, ecv on workers, none cluster mode, all removed to keep code compact.
 
 * **`cluster`**
 
@@ -20,32 +21,37 @@ listen({
 	'createServer': require('http').createServer,
 	'app': app, //your express app
 	'port': 9090, //express app listening port
-	'monPort': 9091, //monitoring app listening port
-  'configureApp': function(app){
-    //register your routes, middlewares to the app, must return value or promise
-    return app;
-  },
-  'warmUp': function(){
-    //warm up your application, must return value or promise
-    return true;
-  }
+	'configureApp': function(app){
+		//register your routes, middlewares to the app, must return value or promise
+		return app;
+	},
+	'warmUp': function(app){
+		//warm up your application, must return value or promise
+		return app;
+	},
 	'debug': { //node-inspector integration
 		'webPort': 9092, //node-inspector web listening port
 		'saveLiveEdit': true
 	},
 	'ecv': {
-	  'mode': 'control',
-	  'root': '/ecv'
+		'mode': 'control',
+		'root': '/ecv'
 	},
-  'cache': {
-    'enable': true, //check cache section
-    'mode': 'standalone' //default creates a standalone worker specific to run as cache manager, otherwise use master to run
-  },
-  'gc': {
-    'monitor': true,  //will reflect the gc (incremental, full) in heartbeat, this conflicts with socket.io somehow
-    'idle-noitification': false, //for performance reason, we'll disable node idle notification to v8 by default
-    'explicit': false //yet impl, meant to expose gc() as a global function
-  },
+	'cache': {
+		'enable': true, //check cache section
+		'mode': 'standalone' //default creates a standalone worker specific to run as cache manager, otherwise use master to run
+	},
+	'gc': {
+		'monitor': true,  //will reflect the gc (incremental, full) in heartbeat, this conflicts with socket.io somehow
+		'idle-noitification': false, //for performance reason, we'll disable node idle notification to v8 by default
+ 		'explicit': false //yet impl, meant to expose gc() as a global function
+	},
+	'monCreateServer': require('http').createServer, //tell master what mon app server should be created as
+	'monConfigureApp': function(monApp){//could overwrite with your own monitor app, and configure it
+		return monApp;
+	},
+	'monApp': monApp,
+	'monPort': 9091, //monitoring app listening port
   	'maxAge': 3600, //worker's max life in seconds, default is 3 days
 	'heartbeatInterval': 5000 //heartbeat interval in MS
 })
@@ -63,6 +69,37 @@ listen({
 //the major change is the return of promise and the much simplified #listen (as all options pushed to construction)
 
 ```
+
+## application flow
+
+For this cluster2 to work perfect, you might need to accept some of the assumption we made of your application flow. It exists to make your life easier, so as for our middleware registration to work as expected.
+The flow is as the following:
+
+* master starts `listen`
+* master configures `monApp` with given `monConfigureApp`
+* master starts `caching` service if enabled
+* master creats server using `monCreateServer` and takes in configured `monApp`
+* master starts server on the `monPort` and wait for `listening` event
+* master starts forking workers
+* worker starts `listen`
+* worker configures `app` with given `configureApp`
+* worker creates server using `createServer` and takes in configured `app`
+* worker starts server on `port` and wait for `listening` event
+* worker receives `listening` event and starts `warmup`
+* worker waits for `warmup` to complete and notify master that it's ready to serve traffic
+* worker resolves the `promise` returned by `listen`
+* master receives notifications from all workers then mark up `ecv`
+* master then resolves the `promise` returned by `listen` 
+
+A few key points: 
+* The abstract pattern is the same for master & worker (different in what's done in each step): **listen** -> **configure app** -> **create server** -> **server listen** -> **warmup** -> **resolve promise**
+* Caching service starts early, so that you could start using cache whether in master or worker, after **configure app**
+* WarmUp is added as an explicit step to allow application to be performant when the traffic is on.
+* Configure app, and warmup could return value (app) or promise which resolves to the app. 
+ 
+A clear flow as above allows users to inject their middleware, routes, warm up their application in a deterministic manner.
+And we could leverage this, so that we could safely register middleware like tps collection in front of users'. This makes testing much easier too,
+as the promise won't be resolved till the server actually starts, no more timed waiting, event emitting etc. You're good to request anything by then.
 
 ## emitter
 
@@ -126,13 +163,38 @@ listen({
 		'saveLiveEdit': true
 	},
 	'ecv': {
-	  'mode': 'control',//could be 'monitor' or 'control'
-	  'root': '/ecv',
-      'markUp': '/ecv/markUp',
-      'markDown': '/ecv/markDown'
-	}
+		'mode': 'control',//could be 'monitor' or 'control'
+		'root': '/ecv',
+		'markUp': '/ecv/markUp',
+      		'markDown': '/ecv/markDown'
+	},
 	'heartbeatInterval': 5000 //heartbeat rate
-})
+});
+
+//alternatively
+
+listen({
+
+  'noWorkers': 1, //default number of cpu cores
+	'createServer': require('http').createServer,
+	'app': app,
+	'port': 9090,
+	'monPort': 9091,
+	'debug': { //node-inspector integration
+		'webPort': 9092,
+		'saveLiveEdit': true
+	},
+	'ecv': {
+		'mode': 'monitor',//could be 'monitor' or 'control'
+		'root': '/ecv',
+		'monitor': '/myapplication/route1',
+      		'validator': function(err, response, body){
+      			//to validate what we got from the monitor url
+      			return true;//or false
+      		}
+	},
+	'heartbeatInterval': 5000 //heartbeat rate
+});
 ```
 
 ## debug
@@ -277,45 +339,57 @@ Therefore, to prevent such from happening when worker is marked to be replaced, 
 
 exports.deathQueue = (function(){
 
-  var tillPrevDeath = null;
+	var tillPrevDeath = null,
+		queued = [];
 
-  return function deathQueue(pid, emitter, success){
+	return function deathQueue(pid, emitter, success){
 
-    assert.ok(pid);
-    assert.ok(emitter);
-    assert.ok(success);
+		assert.ok(pid);
+		assert.ok(emitter);
+		assert.ok(success);
 
-    var tillDeath = when.defer(),
-      afterDeath = null,
-      die = function(){
+		if(!_.contains(queued, pid)){
 
-        var successor = success();
+			queued.push(pid);
 
-        //when successor is in place, the old worker could be discontinued finally
-        emitter.once(util.format('worker-%d-listening', successor.process.pid), function(){
+			var tillDeath = when.defer(),
+				afterDeath = null,
+				die = function(){
 
-          emitter.to(['master', pid]).emit('disconnect', pid);
+					var successor = success();
 
-          emitter.once(util.format('worker-%d-died', pid), function(){
+					//when successor is in place, the old worker could be discontinued finally
+					emitter.once(util.format('worker-%d-warmup', successor.process.pid), function(){
 
-                    tillDeath.resolve(pid);
+						emitter.to(['master', pid]).emit('disconnect', pid);
 
-            if(tillPrevDeath === afterDeath){//last of dyingQueue resolved, clean up the dyingQueue
-                        tillPrevDeath = null;
-            }
-                });
-        });
-      };
+						emitter.once(util.format('worker-%d-died', pid), function(){
 
-    if(!tillPrevDeath){//1st in the dying queue,
-      afterDeath = tillPrevDeath = timeout(60000, tillDeath.promise);//1 min
-      die();
-    }
-    else{
-      afterDeath = tillPrevDeath = timeout(60000, tillPrevDeath.ensure(die));
-    }
-  };
-  
+							tillDeath.resolve(pid);
+
+							if(tillPrevDeath === afterDeath){//last of dyingQueue resolved, clean up the dyingQueue
+			                    tillPrevDeath = null;
+							}
+			            });
+
+			            setTimeout(function(){
+
+			            	process.kill(pid, 'SIGTERM'); //then 'died' event shoul occur after all.
+
+			            }, 60000);
+					});
+				};
+
+			if(!tillPrevDeath){//1st in the dying queue,
+				afterDeath = tillPrevDeath = tillDeath.promise;//1 min
+				die();
+			}
+			else{
+				afterDeath = tillPrevDeath = tillPrevDeath.ensure(die);
+			}
+		}
+	};
+	
 })();
 
 ```
@@ -364,13 +438,25 @@ listen({
 	  'mode': 'control',
 	  'root': '/ecv'
 	},
-    'cache': {
-      'enable': true,//true by default
-      'mode': 'standalone'//as a standalone worker process by default, otherwise will crush with the master process
-    }
+	'cache': {
+		'enable': true,//true by default
+		'mode': 'standalone'//as a standalone worker process by default, otherwise will crush with the master process
+	},
 	'heartbeatInterval': 5000 //heartbeat rate
 })
 ```
+
+Note that, we allow you to use caching w/o cluster2, if you want to enable caching from none cluster2 runtime, the feature could be enabled via:
+
+```javascript
+
+//you can use this in unit test too as we did
+require('cluster2/cache').enable({
+	'enable': true
+});
+
+```
+
 * **`get`** 
 * with the loader, if concurrent `get` happens across the workers in a cluster, only one will be allowed to **load** while the rest will be in fact `watch` till that one finishes loading.
 * this will reduce the stress upon the backend services which loads exact same data nicely
