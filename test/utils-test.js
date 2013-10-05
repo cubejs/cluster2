@@ -287,7 +287,7 @@ describe('utils', function(){
 
 				var successor = pid + 1;
 				process.nextTick(function(){
-					emitter.emit(util.format('worker-%d-listening', successor));
+					emitter.emit(util.format('worker-%d-warmup', successor));
 				});
 
 				return {
@@ -342,7 +342,7 @@ describe('utils', function(){
 
 						//because we queued the deaths, at the time this ith worker is to suicide, the i - 1 th worker should have been gone!
 						_.contains(expects, prevPid).should.equal(false);
-						emitter.emit(util.format('worker-%d-listening', ithSuccessor));
+						emitter.emit(util.format('worker-%d-warmup', ithSuccessor));
 					});
 
 					return {

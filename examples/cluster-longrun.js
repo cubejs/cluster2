@@ -75,6 +75,7 @@ listen({
 	'gc': {
 		'monitor': true
 	},
+	'maxAge': 30,//1 minute, just to see how the workers get killed!
 	'heartbeatInterval': 5000
 })
 .then(function(resolve){

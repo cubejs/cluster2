@@ -33,6 +33,9 @@ describe('master', function(){
 					master = new Master(process, {
 						'emitter': emitter,
 						'monCreateServer': require('http').createServer,
+						'monConfigureApp': function(monApp){
+							return monApp;
+						},
 						'monApp': app,
 						'monPort': port,
 						'port': port + 1,
