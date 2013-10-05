@@ -28,10 +28,12 @@ if(cluster.isMaster){
 	var onlineWorkers = 0,
 		waitForWorkers = when.defer();
 
-	emitter.on('worker-online', function(){
+	emitter.on('worker-online', function(pid){
+
 		onlineWorkers += 1;
 
 		if(onlineWorkers === noWorkers){
+
 			waitForWorkers.resolve(onlineWorkers);
 		}
 	});
@@ -45,18 +47,22 @@ if(cluster.isMaster){
 			logger.info('[master] exiting with error:%j', error);
 
 			process.send({
-				'exit': new Error(error)
-			}); //tell the test it has exited with failure
+				'exit': error ? new Error(error) : null
+			});
 
 			process.nextTick(function(){ //exit now.
+				
 				_.invoke(workers, 'kill', 'SIGTERM'); //force all workers to exit before master itself
+				
 				process.nextTick(function(){
+
 					process.exit(error ? -1 : 0);
+
 				});
 			});
 		};
 
-	timeout(3000, waitForWorkers)
+	timeout(4000, waitForWorkers.promise)
 		.then(function(){
 
 			logger.info('[master] got all workers online notifications');
@@ -114,8 +120,6 @@ else{
 
 	logger.info('[worker:%d] registered status', process.pid, statusName);
 
-	emitter.emit('worker-online', ['master']);//truely ready
-
-	logger.info('[worker:%d] sent notification:%s', 'online-' + pid);
+	emitter.to(['master']).emit('worker-online', pid);//truely ready
 
 }
