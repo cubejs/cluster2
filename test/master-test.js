@@ -47,6 +47,9 @@ describe('master', function(){
 						'cache': {
 
 						},
+						'gc': {
+
+						},
 						'ecv': {
 							'root': '/ecv'
 						}
@@ -66,7 +69,7 @@ describe('master', function(){
 				master.isWorker.should.equal(false);
 				master.pid.should.equal(process.pid);
 				master.status.should.be.ok;
-				should.not.exist(master.gc);
+				master.gc.should.be.ok;
 
 				_.isFunction(master.listen).should.equal(true);
 				_.isFunction(master.run).should.equal(true);
@@ -93,6 +96,16 @@ describe('master', function(){
 
 				}, done);
 			});
+		});
+
+	});
+
+	describe.skip('nanny', function(){
+
+		it('should nanny the workers, and detect runaways', function(done){
+
+			done();
+			
 		});
 
 	});
