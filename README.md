@@ -342,11 +342,21 @@ exports.deathQueue = (function(){
 	var tillPrevDeath = null,
 		queued = [];
 
-	return function deathQueue(pid, emitter, success){
+	return function deathQueue(pid, emitter, success, options){
+
+		options = options || {};
 
 		assert.ok(pid);
 		assert.ok(emitter);
 		assert.ok(success);
+
+		var wait = options.timeout || 60000,
+			death = util.format('worker-%d-died', pid),
+			logger = options.logger || {
+				'debug' : function(){
+					console.log.apply(console, arguments);
+				}
+			};
 
 		if(!_.contains(queued, pid)){
 
@@ -361,22 +371,39 @@ exports.deathQueue = (function(){
 					//when successor is in place, the old worker could be discontinued finally
 					emitter.once(util.format('worker-%d-warmup', successor.process.pid), function(){
 
+						logger.debug('[deathQueue] successor:%d of %d warmup', successor.process.pid, pid);
+
 						emitter.to(['master', pid]).emit('disconnect', pid);
 
-						emitter.once(util.format('worker-%d-died', pid), function(){
+						emitter.once(death, function(){
+
+							logger.debug('[deathQueue] %d died', pid);
 
 							tillDeath.resolve(pid);
 
 							if(tillPrevDeath === afterDeath){//last of dyingQueue resolved, clean up the dyingQueue
+
+								logger.debug('[deathQueue] death queue cleaned up');
+
 			                    tillPrevDeath = null;
 							}
 			            });
 
 			            setTimeout(function(){
 
-			            	process.kill(pid, 'SIGTERM'); //then 'died' event shoul occur after all.
+			            	if(!exports.safeKill(pid, 'SIGTERM', logger)){//worker still there, should emit 'exit' eventually
 
-			            }, 60000);
+				            	logger.debug('[deathQueue] worker:%d did not report death by:%d, kill by SIGTERM', pid, wait);
+			            	}
+			            	else{//suicide or accident already happended, process has run away
+			            		//we emit this from master on behalf of the run away process.
+
+			            		logger.debug('[deathQueue] worker:%d probably ran away, emit:%s on behalf', death);
+
+			            		emitter.to(['master']).emit(death);
+			            	}
+
+			            }, wait);
 					});
 				};
 
@@ -392,6 +419,34 @@ exports.deathQueue = (function(){
 	
 })();
 
+```
+
+Oh, one more thing, much as we hope that all workers will behave well, let us know when it's going to give up, in reality, they might not.
+For an additional level of protection, we added a simple `nanny` monitor to our master, which simply collects each workers' last `heartbeat` event and check if any possible **runaway** happened.
+Once detected, it will be treated the same as a suicide event, using the above `deathQueue`. This will ensure you won't have a cluster running fewer and fewer workers.
+
+```javascript
+
+exports.nanny = function nanny(puppets, emitter, success, options){
+
+	assert.ok(puppets);
+	assert.ok(emitter);
+	assert.ok(success);
+
+	options = options || {};
+
+	var tolerance = options.tolerance,
+		now = Date.now();
+
+	_.each(puppets, function(p){
+
+		if(now - p.lastHeartbeat > tolerance){
+
+			exports.deathQueue(p.pid, emitter, success, options);
+			
+		}
+	});
+};
 ```
 
 ## caching
