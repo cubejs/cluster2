@@ -18,6 +18,7 @@ describe('Test Cluster2 Nanny Feature', function () {
         _.extend(env, {
             host: '127.0.0.1',
             port: 3000,
+            monPort: 3001,
             noWorkers: 2,
             heartbeatInterval: 500,
             maxHeartbeatDelay: 1500
@@ -50,6 +51,15 @@ describe('Test Cluster2 Nanny Feature', function () {
                 msg.pid.should.equal(pid);
                 return done();
             }
+        });
+    });
+
+    it('Should always has 2 workers running', function (done) {
+        request.get('http://127.0.0.1:3001/ComponentStatus?component=worker', function (err, res, body) {
+            console.log(body);
+            var pids = body.substring(1, body.length - 1).split(',');
+            pids.length.should.equal(3); // master & 2 workers
+            done(); 
         });
     });
     
