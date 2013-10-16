@@ -182,8 +182,7 @@ describe('utils', function(){
                     'cpu': ith,
                     'memory': ith,
                     'gc': {
-                        'incremental': ith,
-                        'full': ith
+                        'pauseMS': ith
                     }
                 }).should.equal(false);
             });
@@ -202,8 +201,7 @@ describe('utils', function(){
                 'cpu': 50,
                 'memory': 1000000000,
                 'gc': {
-                    'incremental': 100,
-                    'full': 10
+                    'pauseMS': 100
                 }
             }).should.equal(false);
             
@@ -213,8 +211,7 @@ describe('utils', function(){
                 'cpu': 55,//higher
                 'memory': 1100000000,
                 'gc': {
-                    'incremental': 110,
-                    'full': 11
+                    'pauseMS': 110
                 }
             }).should.equal(true);
             
@@ -232,8 +229,7 @@ describe('utils', function(){
                 'cpu': 50,
                 'memory': 1000000000,
                 'gc': {
-                    'incremental': 100,
-                    'full': 10
+                    'pauseMS': 100
                 }
             }).should.equal(false);
             
@@ -243,8 +239,7 @@ describe('utils', function(){
                 'cpu': 55,//higher
                 'memory': 1100000000,
                 'gc': {
-                    'incremental': 110,
-                    'full': 11
+                    'pauseMS': 110
                 }
             }).should.equal(false);
             
