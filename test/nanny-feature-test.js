@@ -4,15 +4,13 @@ var should = require('should'),
     request = require('request'),
     _ = require('underscore'),
     spawn = require('child_process').spawn,
+    nodeunit = require('nodeunit'),
     EventEmitter = require('events').EventEmitter,
-    emitter = new EventEmitter();
+    emitter = new EventEmitter(),
+    childProc;
 
-describe('Test Cluster2 Nanny Feature', function () {
-
-    var childProc;
-
-    before(function (done) {
-        this.timeout(10000);
+exports['Nanny Feature Test'] = {
+    setUp: function (callback) {
         var env = {};
         _.extend(env, process.env);
         _.extend(env, {
@@ -20,7 +18,7 @@ describe('Test Cluster2 Nanny Feature', function () {
             port: 3000,
             monPort: 3001,
             noWorkers: 2,
-            heartbeatInterval: 500,
+            hearheatInterval: 500,
             maxHeartbeatDelay: 1500
         });
 
@@ -31,40 +29,44 @@ describe('Test Cluster2 Nanny Feature', function () {
 
         childProc.once('message', function (msg) {
             if (msg.ready) {
-                return done();
+                //test.done();
+                callback();
             }
         });
-        //setTimeout(done, 5000);
-    });
+    },
+    
+    tearDown: function (callback) {
+        childProc.kill('SIGKILL');
+        callback();
+    },
 
-    it('Should get the run away worker id and get notified when the worker died', function (done) {
+    'worker runs away and gets killed & replacement has been created': function (test) {
         var pid;
-        this.timeout(10000);
         request.get('http://127.0.0.1:3000/nanny-feature-test', function (err, res, body) {
-            should.not.exist(err);
-            body.should.be.ok;
+            test.equal(err, null);
+            test.ok(body);
             pid = parseInt(body);
-            //console.log('body: ' + pid);
+            console.log(pid);
         });
         childProc.on('message', function (msg) {
             if (msg.dead) {
-                msg.pid.should.equal(pid);
-                return done();
+                console.log(msg.pid);
+                test.strictEqual(msg.pid, pid);
+                request.get('http://127.0.0.1:3001/ComponentStatus?component=worker', function (err, res, body) {
+                    console.log(body);
+                    var pids = body.substring(1, body.length - 1).split(',');
+                    test.strictEqual(pids.length, 3); // master & 2 workers
+                    test.done();
+                });
             }
         });
-    });
+    },
 
-    it('Should always has 2 workers running', function (done) {
+    /*'New worker created to replace the killed worker': function (test) {
         request.get('http://127.0.0.1:3001/ComponentStatus?component=worker', function (err, res, body) {
-            console.log(body);
             var pids = body.substring(1, body.length - 1).split(',');
-            pids.length.should.equal(3); // master & 2 workers
-            done(); 
+            test.strictEqual(pids.length, 3); // master & 2 workers
+            test.done();
         });
-    });
-    
-    after(function (done) {
-        childProc.kill('SIGKILL');
-        done();
-    });
-});
+    }*/
+};
