@@ -182,8 +182,7 @@ describe('utils', function(){
                     'cpu': ith,
                     'memory': ith,
                     'gc': {
-                        'incremental': ith,
-                        'full': ith
+                        'pauseMS': ith
                     }
                 }).should.equal(false);
             });
@@ -202,8 +201,7 @@ describe('utils', function(){
                 'cpu': 50,
                 'memory': 1000000000,
                 'gc': {
-                    'incremental': 100,
-                    'full': 10
+                    'pauseMS': 100
                 }
             }).should.equal(false);
             
@@ -213,8 +211,7 @@ describe('utils', function(){
                 'cpu': 55,//higher
                 'memory': 1100000000,
                 'gc': {
-                    'incremental': 110,
-                    'full': 11
+                    'pauseMS': 110
                 }
             }).should.equal(true);
             
@@ -232,8 +229,7 @@ describe('utils', function(){
                 'cpu': 50,
                 'memory': 1000000000,
                 'gc': {
-                    'incremental': 100,
-                    'full': 10
+                    'pauseMS': 100
                 }
             }).should.equal(false);
             
@@ -243,8 +239,7 @@ describe('utils', function(){
                 'cpu': 55,//higher
                 'memory': 1100000000,
                 'gc': {
-                    'incremental': 110,
-                    'full': 11
+                    'pauseMS': 110
                 }
             }).should.equal(false);
             
@@ -258,6 +253,7 @@ describe('utils', function(){
 		it('should let the suicide worker die if it is the 1st one in the queue', function(done){
 
 			var deathQueue = utils.deathQueue,
+				queue = [],
 				emitter = new (require('events').EventEmitter)();
 
 			emitter.to = function(targets){
@@ -283,7 +279,7 @@ describe('utils', function(){
 				done();
 			});
 
-			deathQueue(pid, emitter, function(){
+			deathQueue(queue, pid, emitter, function(){
 
 				var successor = pid + 1;
 				process.nextTick(function(){
@@ -302,6 +298,7 @@ describe('utils', function(){
 		it('should let us queue the suicide workers one after another', function(done){
 
 			var deathQueue = utils.deathQueue,
+				queue = [],
 				emitter = new (require('events').EventEmitter)();
 
 			emitter.to = function(targets){
@@ -336,7 +333,7 @@ describe('utils', function(){
 					prevPid = ithPid - 2,
 					ithSuccessor = ithPid + 1;
 
-				deathQueue(ithPid, emitter, function(){
+				deathQueue(queue, ithPid, emitter, function(){
 
 					process.nextTick(function(){
 
