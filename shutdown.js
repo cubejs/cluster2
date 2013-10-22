@@ -1,9 +1,10 @@
 'use strict';
 
-var readMasterPid = require('./utils').readMasterPid,
-	readPids = require('./utils').readPids,
-	safeKill = require('./utils').safeKill,
-	getLogger = require('./utils').getLogger,
+var utils = require('./lib/utils'),
+	readMasterPid = utils.readMasterPid,
+	readPids = utils.readPids,
+	safeKill = utils.safeKill,
+	getLogger = utils.getLogger,
 	optimist = require('optimist'),
 	when = require('when'),
 	path = require('path'),
