@@ -9,6 +9,7 @@ reports
 target
 docs
 logs
+log
 cluster-cache-domain
 cluster-cache-persist
 ports

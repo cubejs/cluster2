@@ -1,7 +1,11 @@
 *.iml
 .travis.yml
+.idea
 node_modules
 test
+examples
+log
+pids
 cluster-cache-domain
 cluster-cache-persist
 ports
