@@ -31,6 +31,13 @@ app.get('/', function(req, res) {
     }
 });
 
+app.get('/_warmup', function (req, res) {
+    res.send('worker-' + process.pid + ' is warming up');
+    if (!serving) {
+        req.connection.end();
+    }
+});
+
 monApp.get('/monapp', function(req, res) {
     res.send('Hello from Monitor app');
     if(!serving)  {
@@ -46,7 +53,7 @@ var c = new Cluster({
     port: 3000,
     cluster: true,
     timeout: 500,
-    noWorkers: 1,
+    noWorkers: 3,
     connThreshold: 4,
     ecv: {
         path: '/ecv', // Send GET to this for a heartbeat
@@ -55,6 +62,13 @@ var c = new Cluster({
         validator: function() {
             return true;
         }
+    },
+    warmup: {
+        basePort: 6000,
+        urls: [
+            '/_warmup',
+            '/',
+        ]
     }
 });
 
@@ -64,7 +78,9 @@ c.on('died', function(pid) {
 c.on('forked', function(pid) {
     console.log('Worker ' + pid + ' forked');
 });
-
+/*c.on('component-status-initialized', function (componentStatusResolved) {
+    console.log(process.pid + ' ready to serve traffic');
+});*/
 c.listen(function(cb) {
 	// You need to pass the app. monApp is optional. 
 	// If monApp is not passed, cluster2 creates one for you.
