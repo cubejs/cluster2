@@ -8,3 +8,4 @@ log
 pids
 cluster-cache-domain
 cluster-cache-persist
+ports
