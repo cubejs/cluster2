@@ -17,7 +17,7 @@ describe('master', function(){
 		done();
 	});
 
-	describe('#construction', function(){
+	describe.skip('#construction', function(){
 
 		it('should create a master', function(done){
 
