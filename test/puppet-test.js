@@ -57,7 +57,9 @@ describe('puppet', function(){
                         });
                     }
                 },
-                puppet = new Puppet(master, worker, {}, {});
+                puppet = new Puppet(master, worker, {
+                        'port':8080
+                    }, {});
 
             master.puppets[pid] = puppet;
 
@@ -76,9 +78,9 @@ describe('puppet', function(){
                 puppet.whenOnline();
             });
 
-            emitter.once('listening', function(worker){
+            emitter.once('listening', function(worker, address){
 
-                puppet.whenListening();
+                puppet.whenListening(address);
             });
 
             emitter.once('heartbeat', function(worker, heartbeat){
@@ -119,7 +121,9 @@ describe('puppet', function(){
                     emitter.emit('exit', worker);
                 });
 
-                emitter.emit('listening', worker);
+                emitter.emit('listening', worker, {
+                    'port': 8080
+                });
             });
 
             emitter.emit('online', worker);
