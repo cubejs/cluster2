@@ -35,7 +35,7 @@ describe('Cache Performance Test', function () {
         return deferred.promise;
     };
 
-    beforeEach(function (done) {
+    before(function (done) {
         var token = 't-' + Date.now();
         childProc = fork(require.resolve('./lib/cluster-cache-runtime.js'), ['--token=' + token]);
         childProc.on('message', function (msg) {
@@ -48,7 +48,7 @@ describe('Cache Performance Test', function () {
         });
     });
 
-    afterEach(function (done) {
+    after(function (done) {
         childProc.kill('SIGTERM');
         done();
     });
