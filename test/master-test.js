@@ -24,7 +24,7 @@ describe('master', function(){
 			var logger = process.getLogger(),
 				Master = require('../lib/master').Master;
 
-			pickAvailablePorts(7000, 7999, 4).then(function(ports){
+			pickAvailablePorts(7000, 7999, 5).then(function(ports){
 
 				logger.info('[test] ports picked:%j', ports);
 
@@ -39,6 +39,7 @@ describe('master', function(){
 						'monApp': app,
 						'monPort': ports[0],
 						'port': ports[1],
+                        'warmUpPort': ports[4],
 						'noWorkers': 0,
 						'debug': {
 							'debugPort': ports[2],
