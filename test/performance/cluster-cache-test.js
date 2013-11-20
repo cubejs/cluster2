@@ -37,7 +37,7 @@ describe('Cache Performance Test', function () {
 
     beforeEach(function (done) {
         var token = 't-' + Date.now();
-        childProc = fork(require.resolve('./lib/cluster-cache-runtime.js'), ['--token=' + token]);
+        childProc = fork(require.resolve('../lib/cluster-cache-runtime.js'), ['--token=' + token]);
         childProc.on('message', function (msg) {
             if(msg.ready) {
                 return done();
@@ -49,8 +49,9 @@ describe('Cache Performance Test', function () {
     });
 
     afterEach(function (done) {
+        this.timeout(5000);
         childProc.kill('SIGTERM');
-        done();
+        setTimeout(done, 4000);
     });
 
     describe('# 90% read, %10 write', function () {
