@@ -29,6 +29,7 @@ listen({
 		//warm up your application, must return value or promise
 		return app;
 	},
+	'warmUpPort': 9093, //the port to do warmup, after which, server will be stopped, and restarted on the actual port
 	'debug': { //node-inspector integration
 		'webPort': 9092, //node-inspector web listening port
 		'saveLiveEdit': true
@@ -84,9 +85,11 @@ The flow is as the following:
 * worker starts `listen`
 * worker configures `app` with given `configureApp`
 * worker creates server using `createServer` and takes in configured `app`
-* worker starts server on `port` and wait for `listening` event
+* worker starts server on `warmUpPort` and wait for `listening` event
 * worker receives `listening` event and starts `warmup`
-* worker waits for `warmup` to complete and notify master that it's ready to serve traffic
+* worker waits for `warmup` to complete and stops the warmup server
+* worker starts server on actual `port` and wait for `listening` event
+* worker receives `listening` event and notify master that it's ready to serve traffic
 * worker resolves the `promise` returned by `listen`
 * master receives notifications from all workers then mark up `ecv`
 * master then resolves the `promise` returned by `listen` 
