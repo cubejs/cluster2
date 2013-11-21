@@ -37,7 +37,7 @@ describe('Cache Performance Test', function () {
 
     beforeEach(function (done) {
         var token = 't-' + Date.now();
-        childProc = fork(require.resolve('../lib/cluster-cache-runtime.js'), ['--token=' + token]);
+        childProc = fork(require.resolve('./lib/cluster-cache-runtime.js'), ['--token=' + token]);
         childProc.on('message', function (msg) {
             if(msg.ready) {
                 return done();
