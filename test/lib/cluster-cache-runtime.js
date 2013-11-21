@@ -51,7 +51,9 @@ listen({
     'configureApp': configureApp,
     'cache': {
         'enable': true,
-        'mode': 'standalone'
+        'mode': 'standalone',
+        'domainPath': '/tmp/cluster-cache-domain-' + process.pid,
+        'persistPath': '/tmp/cluster-cache-persist-' + process.pid
     },
     'ecv': {
         'mode': 'control',
