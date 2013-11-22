@@ -38,6 +38,7 @@ describe('Cache Performance Test', function () {
     };
 
     before(function (done) {
+        this.timeout(10000);
         var token = 't-' + Date.now();
         utils.pickAvailablePorts(9090, 9190, 2).then(function (ports) {
             port = ports[0];
