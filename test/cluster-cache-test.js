@@ -63,8 +63,9 @@ describe('Cache Performance Test', function () {
     });
 
     describe('# 90% read, %10 write', function () {
+        this.timeout(10000);
         var tasks = [];
-        for (var i=0; i<200; i++) {
+        for (var i=0; i<20; i++) {
             if (i % 10 === 0) {
                 tasks.push(writeTask);
             }else {
@@ -84,8 +85,9 @@ describe('Cache Performance Test', function () {
     });
 
     describe('# 50% read, 50% write', function () {
+        this.timeout(10000);
         var tasks = [];
-        for (var i=0; i<200; i++) {
+        for (var i=0; i<20; i++) {
             if (i % 10 < 5) {
                 tasks.push(writeTask);
             }else {
@@ -105,8 +107,9 @@ describe('Cache Performance Test', function () {
     });
 
     describe('# 10% read, 90% write', function () {
+        this.timeout(10000);
         var tasks = [];
-        for (var i=0; i<200; i++) {
+        for (var i=0; i<20; i++) {
             if (i % 10 < 9) {
                 tasks.push(writeTask);
             }else {

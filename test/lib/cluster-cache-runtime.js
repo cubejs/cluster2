@@ -45,7 +45,7 @@ function configureApp() {
 
 //console.log('aaa: ' + process.env.port);
 listen({
-    'noWorkers': 8,
+    'noWorkers': 2,
     'createServer': require('http').createServer,
     'app': app,
     'port': parseInt(process.env.port) || 9090,
