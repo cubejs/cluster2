@@ -16,7 +16,7 @@ listen({
     'noWorkers': 1,
     'createServer': require('http').createServer,
     'app': app,
-    'port': 9090,
+    'port': parseInt(process.env.port) || 9090,
     'configureApp': configureApp,
     'cache': {
         'enable': false
@@ -26,7 +26,7 @@ listen({
         'root': '/ecv'
     },
     'monCreateServer': require('http').createServer,
-    'monPort': 9091
+    'monPort': parseInt(process.env.monPort) || 9091
 }).then(function (resolved) {
     //console.log(resolved);
     if (resolved.worker) {
