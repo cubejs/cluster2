@@ -64,6 +64,18 @@ listen({
 
 		return app;
 	},
+    'warmup': function(app, address){
+        //warmup is done at both the initialization, and when the worker is to be replaced.
+        //the long run test verifies that with warmup, the 1st user request won't be slowed down even it's a new worker
+        var tillWarmUp = require('when').defer();
+        
+        request.get('http://localhost:' + address.port, function(err, response, body){
+					
+                tillWarmUp.resolve(app);
+            });
+        
+        return tillWarmUp.promise;
+    },
 	'debug': {
 		'webPort': 8082,
 		'saveLiveEdit': true
@@ -75,8 +87,8 @@ listen({
 	'gc': {
 		'monitor': true
 	},
-	'maxAge': 30,//1 minute, just to see how the workers get killed!
-	'heartbeatInterval': 5000
+	'maxAge': 60,//1 minute, just to see how the workers get killed!
+	'heartbeatInterval': 10000
 })
 .then(function(resolve){
 
