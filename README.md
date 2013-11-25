@@ -95,7 +95,7 @@ The flow is as the following:
 * master then resolves the `promise` returned by `listen` 
 
 A few key points: 
-* The abstract pattern is the same for master & worker (different in what's done in each step): **listen** -> **configure app** -> **create server** -> **server listen** -> **warmup** -> **resolve promise**
+* The abstract pattern is the same for master & worker (different in what's done in each step): **listen** -> **configure app** -> **create server** -> **warmup** -> **start listening** -> **resolve promise**
 * Caching service starts early, so that you could start using cache whether in master or worker, after **configure app**
 * WarmUp is added as an explicit step to allow application to be performant when the traffic is on.
 * Configure app, and warmup could return value (app) or promise which resolves to the app. 
