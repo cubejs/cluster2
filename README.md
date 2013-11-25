@@ -25,7 +25,7 @@ listen({
 		//register your routes, middlewares to the app, must return value or promise
 		return app;
 	},
-	'warmUp': function(app){
+	'warmUp': function(app, address){
 		//warm up your application, must return value or promise
 		return app;
 	},
