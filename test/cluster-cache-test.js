@@ -59,6 +59,7 @@ describe('Cache Performance Test', function () {
     after(function (done) {
         this.timeout(5000);
         childProc.kill('SIGTERM');
+        require('fs').unlinkSync('cluster-cache-domain');
         setTimeout(done, 4000);
     });
 

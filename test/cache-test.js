@@ -2,7 +2,8 @@
 
 var should = require('should'),
 	getLogger = require('../lib/utils').getLogger,
-	logger = getLogger(__filename);
+	logger = getLogger(__filename),
+    fs = require('fs');
 
 describe('cache', function(){
 
@@ -19,6 +20,11 @@ describe('cache', function(){
             return done(error);
         });
 	});
+
+    after(function (done) {
+        fs.unlinkSync('cluster-cache-domain');    
+        done();
+    });
 
 	describe('#cache-user', function(){
 
