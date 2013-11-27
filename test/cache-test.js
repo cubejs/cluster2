@@ -13,9 +13,11 @@ describe('cache', function(){
 
 		require('../lib/cache').enable({
 			'enable': true
-		});
-		
-		done();
+		}).then(function (resolved) {
+		    return done();
+        }).otherwise(function (error) {
+            return done(error);
+        });
 	});
 
 	describe('#cache-user', function(){
