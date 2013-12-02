@@ -4,6 +4,10 @@
         "name": "Roy Zhou",
         "email": "huzhou@ebay.com"
     }],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/cubejs/cluster2.git"
+    },
     "name": "cluster2",
     "version": "0.5.0-SNAPSHOT",
     "engines": {
