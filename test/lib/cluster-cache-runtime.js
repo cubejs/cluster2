@@ -1,6 +1,6 @@
 'use strict';
 
-var listen = require('../../lib/index.js').listen;
+var listen = require('../../index').listen;
 var express = require('express');
 var app = express();
 

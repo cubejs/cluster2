@@ -13,7 +13,7 @@
     "engines": {
         "node": ">= 0.10.0"
     },
-    "main": "lib/index.js",
+    "main": "index.js",
     "dependencies": {
         "underscore": "~1.4.4",
         "usage": "~0.3.8",
