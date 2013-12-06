@@ -38,10 +38,8 @@
     "scripts": {
         "test": "nodeunit test"
     },
-    "optionalDependencies": {
-
-    },
+    "optionalDependencies": {},
     "publishConfig": {
-        "registry": "https://registry.npmjs.org"
+        "registry": "https://registry.npmjs.org/"
     }
 }

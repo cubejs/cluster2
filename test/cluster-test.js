@@ -282,7 +282,9 @@ module.exports = {
                 });
             }
             // Send shutdown while requests are in-flight
-            shutdown(emitter);
+            setTimeout(function() {
+                shutdown(emitter);
+            }, 10);
         });
 
         emitter.on('start failure', function (error) {

@@ -26,6 +26,17 @@ server.get('/', function(req, res) {
     }
 });
 
+// test nanny feature
+server.get('/nanny-feature-test', function (req, res) {
+    // the first worker that handles the request will run away
+    res.send(process.pid + '');
+    console.log('worker ' + process.pid + ' will run away after 2s');
+    setTimeout(function () {
+        console.log('worker ' + process.pid + ' runs away');
+        clearInterval(process.heartbeat);
+    }, 2000);
+});
+
 server.on('close', function() {
     serving = false;
 })
@@ -40,12 +51,14 @@ var c = new Cluster({
     ecv: {
         control: true
     },
-    heartbeatInterval: process.env["heartbeatInterval"] || 1000
+    heartbeatInterval: process.env["heartbeatInterval"] || 1000,
+    maxHeartbeatDelay: process.env["maxHeartbeatDelay"] || 3000
 });
 
 c.on('died', function(pid) {
-    console.log('Worker ' + pid + ' died');
+    //console.log('Worker ' + pid + ' died');
     process.send({
+        pid: pid,
         dead: true
     })
 });

@@ -12,3 +12,6 @@ logs
 cluster-cache-domain
 cluster-cache-persist
 ports
+/coverage/
+/lib-cov/
+/log/
