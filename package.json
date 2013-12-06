@@ -3,12 +3,16 @@
     "contributors": [{
         "name": "Subbu Allamaraju",
         "email": "subbu@ebaysf.com"
+    }, 
+    {
+        "name": "Roy Zhou",
+        "email": "huzhou@ebay.com"
     }],
     "name": "cluster2",
-    "version": "0.4.17",
+    "version": "0.4.23",
     "repository": {
         "type": "git",
-        "url": "https://github.com/ql-io/cluster2"
+        "url": "https://github.com/cubejs/cluster2"
     },
     "engines": {
         "node": ">= 0.8.0"
@@ -34,5 +38,10 @@
     "scripts": {
         "test": "nodeunit test"
     },
-    "optionalDependencies": {}
+    "optionalDependencies": {
+
+    },
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
+    }
 }
