@@ -4,6 +4,10 @@
         "name": "Roy Zhou",
         "email": "huzhou@ebay.com"
     }],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/cubejs/cluster2.git"
+    },
     "name": "cluster2",
     "version": "0.5.0-SNAPSHOT",
     "engines": {
@@ -39,5 +43,8 @@
         "stop": "node shutdown.js",
         "pretest": "rm -rf ./log; mkdir log; rm -rf ./pids; mkdir pids",
         "test": "mocha --ui bdd --timeout 10s --reporter spec  ./test/*-test.js"
+    },
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
     }
 }
