@@ -23,7 +23,12 @@ describe('cache', function(){
 
     after(function (done) {
         fs.unlinkSync('cluster-cache-domain');    
-        done();
+        process.cacheServer.close(function (err) {
+            if (err) {
+                return done(err);
+            }
+            return done();
+        });
     });
 
 	describe('#cache-user', function(){
@@ -41,7 +46,7 @@ describe('cache', function(){
 
 		it('should support all ACID operations', function(done){
 
-			this.timeout(3000);
+			this.timeout(5000);
 
 			require('../lib/cache-usr').user()
 				.then(function(usr){
@@ -121,7 +126,7 @@ describe('cache', function(){
 
 		it('should give a Cache interface back which hides the cache-usr behind', function(done){
 
-			this.timeout(4000);
+			this.timeout(5000);
 
 			var namespace = 'use-ns-' + Date.now(),
 				persist = true,

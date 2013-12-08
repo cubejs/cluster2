@@ -52,7 +52,7 @@ listen({
     'configureApp': configureApp,
     'cache': {
         'enable': true,
-        'mode': 'standalone',
+        'mode': 'dependent'//'standalone',
         //'domainPath': './tmp/cluster-cache-domain-' + process.pid,
         //'persistPath': 'tmp/cluster-cache-persist-' + process.pid
     },

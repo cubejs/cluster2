@@ -37,7 +37,7 @@ describe('Cache Performance Test', function () {
         return deferred.promise;
     };
 
-    before(function (done) {
+    beforeEach(function (done) {
         this.timeout(10000);
         var token = 't-' + Date.now();
         utils.pickAvailablePorts(9090, 9190, 2).then(function (ports) {
@@ -56,7 +56,7 @@ describe('Cache Performance Test', function () {
         });
     });
 
-    after(function (done) {
+    afterEach(function (done) {
         this.timeout(5000);
         childProc.kill('SIGTERM');
         require('fs').unlinkSync('cluster-cache-domain');
