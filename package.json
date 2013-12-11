@@ -13,7 +13,7 @@
     "engines": {
         "node": ">= 0.10.0"
     },
-    "main": "lib/index.js",
+    "main": "index.js",
     "dependencies": {
         "underscore": "~1.4.4",
         "usage": "~0.3.8",
@@ -26,6 +26,7 @@
         "ejs": "~0.8.4",
         "node-inspector": "~0.4.0",
         "gc-stats": "~0.0.1",
+        "nodefly-uvmon": "~0.0.7",
         "bignumber.js": "~1.1.1",
         "npm": "~1.3",
         "optimist": "~0.6.0"
