@@ -283,7 +283,7 @@ describe('utils', function(){
 
 				var successor = pid + 1;
 				process.nextTick(function(){
-					emitter.emit(util.format('worker-%d-warmup', successor));
+					emitter.emit(util.format('worker-%d-listening', successor));
 				});
 
 				return {
@@ -339,7 +339,70 @@ describe('utils', function(){
 
 						//because we queued the deaths, at the time this ith worker is to suicide, the i - 1 th worker should have been gone!
 						_.contains(expects, prevPid).should.equal(false);
-						emitter.emit(util.format('worker-%d-warmup', ithSuccessor));
+						emitter.emit(util.format('worker-%d-listening', ithSuccessor));
+					});
+
+					return {
+						'process': {
+							'pid': ithSuccessor
+						}
+					}
+				});
+			});
+		});
+
+		it('should let us queue the suicide workers one after another even if the process exit does not work normally', function(done){
+
+            this.timeout(20000);//testing creates 10 processes, each needs 1s to timeout
+            
+			var deathQueue = utils.deathQueueGenerator({
+                    'timeout': 1000
+                }),//1sec timeout for the testing purpose.
+				queue = [],
+				emitter = new (require('events').EventEmitter)();
+
+			emitter.to = function(targets){
+
+				return {
+					'emit': function(){
+						emitter.emit.apply(emitter, arguments);
+					}
+				};
+			};
+
+			var pid = Math.floor(process.pid * (1 + Math.random())),
+				util = require('util'),
+				expects = _.map(_.range(0, 10), function(ith){return pid + ith * 2;});
+
+			emitter.on('disconnect', function(suicide){
+
+				suicide.should.equal(expects.shift());
+
+                /* this is commented out deliberately, to test when the exit doesn't work normally
+                 * the expectation is that the #safeKill will kickin and emit the 'worker-%d-died' event
+				process.nextTick(function(){
+					emitter.emit(util.format('worker-%d-died', suicide));
+				});
+                */
+
+				if(!expects.length){
+					done();
+				}
+			});
+
+			_.each(_.range(0, 10), function(ith){
+
+				var ithPid = pid + ith * 2,
+					prevPid = ithPid - 2,
+					ithSuccessor = ithPid + 1;
+
+				deathQueue(queue, ithPid, emitter, function(){
+
+					process.nextTick(function(){
+
+						//because we queued the deaths, at the time this ith worker is to suicide, the i - 1 th worker should have been gone!
+						_.contains(expects, prevPid).should.equal(false);
+						emitter.emit(util.format('worker-%d-listening', ithSuccessor));
 					});
 
 					return {
@@ -367,11 +430,11 @@ describe('utils', function(){
 			var gc = utils.gcstats,
 				min = 1,
 				bigger = [0], 
-				nextGrowth;;
+				nextGrowth;
 
 			gc.on('stats', function onStats(stats){
 
-  				console.log('%d %j', process.pid, stats);
+  				console.log('[gcstats] %d %j', process.pid, stats);
 
 				stats.should.be.ok;
 				/*{
@@ -419,6 +482,33 @@ describe('utils', function(){
 		});
 
 	});
+    
+    describe('#uvmon', function(){
+    
+        it('should collect uv stats', function(done){
+            
+            var uvmon = require('nodefly-uvmon'),
+                stats = uvmon.getData();
+            //{"count":0,"sum_ms":0,"slowest_ms":0}
+            console.log('[uvmon] %d %j', process.pid, stats);
+            stats.should.be.ok;
+            
+            (function tick(countdown){
+                
+                if(!countdown){
+                    return done();
+                }
+                
+                stats = uvmon.getData();
+                console.log('[uvmon] %d %j', process.pid, stats);
+            
+                setTimeout(function(){
+                        tick(countdown - 1)
+                    }, 10);
+                    
+            })(5);
+        });
+    });
 
 	describe('#ls', function(){
 

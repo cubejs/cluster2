@@ -48,6 +48,7 @@ describe('worker', function(){
 						'createServer': require('http').createServer,
 						'app': app,
 						'port': port,
+                        'warmUpPort': port + 1,
 						'configureApp': function(app){
 							configured = true;
 						},

@@ -4,12 +4,16 @@
         "name": "Roy Zhou",
         "email": "huzhou@ebay.com"
     }],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/cubejs/cluster2.git"
+    },
     "name": "cluster2",
     "version": "0.5.0-SNAPSHOT",
     "engines": {
         "node": ">= 0.10.0"
     },
-    "main": "lib/index.js",
+    "main": "index.js",
     "dependencies": {
         "underscore": "~1.4.4",
         "usage": "~0.3.8",
@@ -22,6 +26,7 @@
         "ejs": "~0.8.4",
         "node-inspector": "~0.4.0",
         "gc-stats": "~0.0.1",
+        "nodefly-uvmon": "~0.0.7",
         "bignumber.js": "~1.1.1",
         "npm": "~1.3",
         "optimist": "~0.6.0"
@@ -35,9 +40,12 @@
     },
     "scripts": {
         "prestart": "rm -rf ./log; mkdir log; rm -rf ./pids; mkdir pids",
-        "start": "node ./examples/cluster-demo.js --port=9090 --monPort=9091 --noWorkers=1 --cache.enable --heartbeat.interval=5000 &",
+        "start": "node ./examples/cluster-demo.js --port=9090 --monPort=9091 --noWorkers=2 --cache.enable --heartbeat.interval=5000 &",
         "stop": "node shutdown.js",
         "pretest": "rm -rf ./log; mkdir log; rm -rf ./pids; mkdir pids",
         "test": "mocha --ui bdd --timeout 10s --reporter spec  ./test/*-test.js"
+    },
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
     }
 }

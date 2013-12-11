@@ -1,6 +1,6 @@
 'use strict';
 
-var listen = require('../../lib/index.js').listen;
+var listen = require('../../index').listen;
 var express = require('express');
 var app = express();
 
@@ -43,26 +43,29 @@ function configureApp() {
     return app;
 }
 
+//console.log('aaa: ' + process.env.port);
 listen({
-    'noWorkers': 8,
+    'noWorkers': 2,
     'createServer': require('http').createServer,
     'app': app,
-    'port': 9090,
+    'port': parseInt(process.env.port) || 9090,
     'configureApp': configureApp,
     'cache': {
         'enable': true,
-        'mode': 'standalone'
+        'mode': 'standalone',
+        'domainPath': '/tmp/cluster-cache-domain-' + process.pid,
+        'persistPath': '/tmp/cluster-cache-persist-' + process.pid
     },
     'ecv': {
         'mode': 'control',
         'root': '/ecv'
     },
     'monCreateServer': require('http').createServer,
-    'monPort': 9091
+    'monPort': parseInt(process.env.monPort) || 9091
 }).then(function (resolved) {
-    //if (!require('cluster').isMaster) {
-        process.send({ready: true}); 
-    //}
+    process.send({
+        ready: true, 
+    });
 }).otherwise(function (err) {
     process.send({err: err});
 });

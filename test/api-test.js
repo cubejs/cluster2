@@ -16,7 +16,7 @@ describe('cluster2', function(){
 
 		it('should assert true', function(done){
 
-			var cluster2 = require('../lib/index');
+			var cluster2 = require('../index');
 			cluster2.isMaster.should.equal(true);
 			cluster2.isWorker.should.equal(false);
 			cluster2.emitter.should.be.ok;
