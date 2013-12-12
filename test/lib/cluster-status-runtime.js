@@ -1,6 +1,6 @@
 'use strict';
 
-process.getLogger = require('../../lib/utils.js').getLogger;
+process.getLogger = require('../../lib/utils').getLogger;
 
 var should = require('should'),
 	cluster = require('cluster'),
