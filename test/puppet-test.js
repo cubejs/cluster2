@@ -48,7 +48,7 @@ describe('puppet', function(){
 
                         process.nextTick(function(){
 
-                            emitter.emit('disconnect', worker);
+                            emitter.emit('dismiss', worker);
 
                             process.nextTick(function(){
 
@@ -65,7 +65,7 @@ describe('puppet', function(){
 
             puppet.should.be.ok;
 
-            _.each(['disconnect', 'whenOnline', 'whenListening', 'whenExit', 'whenHeartbeat'], function(m){
+            _.each(['dismiss', 'whenOnline', 'whenListening', 'whenExit', 'whenHeartbeat'], function(m){
                 _.isFunction(puppet[m]).should.equal(true);
             });
 
@@ -88,9 +88,9 @@ describe('puppet', function(){
                 puppet.whenHeartbeat();
             });
 
-            emitter.once('disconnect', function(worker){
+            emitter.once('dismiss', function(worker){
 
-                puppet.disconnect();
+                puppet.dismiss();
             });
 
             emitter.once('exit', function(worker){
