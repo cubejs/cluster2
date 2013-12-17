@@ -11,7 +11,7 @@ function configureApp() {
         if (!key || !value) {
             res.send('hello', 200);
         }else {
-            var cache = require('../../lib/cache.js').use('cache-test');
+            var cache = require('cluster-cache').use('cache-test');
             cache.set(key, value).then(function (happens) {
                 if (happens) {
                     res.send(value, 200);
@@ -29,7 +29,7 @@ function configureApp() {
         if (!key) {
             res.send('hello', 200);
         }else {
-            var cache = require('../../lib/cache.js').use('cache-test');
+            var cache = require('cluster-cache').use('cache-test');
             cache.get(key, function () {
                 return 'cache-test';
             }).then(function (value) {
