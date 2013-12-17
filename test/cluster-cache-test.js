@@ -6,7 +6,7 @@ var fork = require('child_process').fork;
 var when = require('when');
 var parallel = require('when/parallel');
 var util = require('util');
-var utils = require('../lib/utils.js');
+var utils = require('../lib/utils');
 
 describe('Cache Performance Test', function () {
 

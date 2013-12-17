@@ -15,21 +15,24 @@
     },
     "main": "index.js",
     "dependencies": {
-        "underscore": "~1.4.4",
-        "usage": "~0.3.8",
-        "when": "~2.3.0",
+        "cluster-emitter": "git://github.com/cubejs/cluster-emitter",
+        "cluster-status": "git://github.com/cubejs/cluster-status",
+        "cluster-cache": "git://github.com/cubejs/cluster-cache",
+        "npm": "1.3.18",
+        "optimist": "~0.6.0",
+        "underscore": "~1.5.2",
+        "when": "~2.7.0",
         "winston": "~0.7.2",
         "graceful-fs": "~2.0.0",
-        "request": "~2.21.0",
+        "request": "~2.30.0",
         "express": "~3.1.0",
-        "socket.io": "~0.9.16",
         "ejs": "~0.8.4",
+        "bignumber.js": "~1.1.1",
+        "usage": "~0.3.8",
+        "socket.io": "~0.9.16",
         "node-inspector": "~0.4.0",
         "gc-stats": "~0.0.1",
-        "nodefly-uvmon": "~0.0.7",
-        "bignumber.js": "~1.1.1",
-        "npm": "~1.3",
-        "optimist": "~0.6.0"
+        "nodefly-uvmon": "~0.0.7"
     },
     "devDependencies": {
         "mocha": "~1.11.0",
@@ -42,7 +45,7 @@
         "prestart": "rm -rf ./log; mkdir log; rm -rf ./pids; mkdir pids",
         "start": "node ./examples/cluster-demo.js --port=9090 --monPort=9091 --noWorkers=2 --cache.enable --heartbeat.interval=5000 &",
         "stop": "node shutdown.js",
-        "pretest": "rm -rf ./log; mkdir log; rm -rf ./pids; mkdir pids",
+        "pretest": "rm -rf ./log ./cluster-cache-*; mkdir log; rm -rf ./pids; mkdir pids",
         "test": "mocha --ui bdd --timeout 10s --reporter spec  ./test/*-test.js"
     },
     "publishConfig": {

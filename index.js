@@ -55,7 +55,7 @@ cluster2.main = cluster2.main || require('underscore').extend(require('./lib/mai
      */
     get emitter(){
         
-        return require('./emitter');
+        return require('cluster-emitter');
     },
     
     /**
@@ -63,7 +63,7 @@ cluster2.main = cluster2.main || require('underscore').extend(require('./lib/mai
      */
     get status(){
         
-        return require('./status');
+        return require('cluster-status');
     },
     
     /**
@@ -71,7 +71,7 @@ cluster2.main = cluster2.main || require('underscore').extend(require('./lib/mai
      */
     get cacheManager(){
         
-        return require('./cache');
+        return require('cluster-cache');
     }
 });
 

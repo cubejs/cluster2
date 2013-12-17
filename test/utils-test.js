@@ -268,7 +268,7 @@ describe('utils', function(){
 			var pid = Math.floor(process.pid * (1 + Math.random())),
 				util = require('util');
 
-			emitter.once('disconnect', function(suicide){
+			emitter.once('dismiss', function(suicide){
 
 				suicide.should.equal(pid);
 
@@ -314,7 +314,7 @@ describe('utils', function(){
 				util = require('util'),
 				expects = _.map(_.range(0, 10), function(ith){return pid + ith * 2;});
 
-			emitter.on('disconnect', function(suicide){
+			emitter.on('dismiss', function(suicide){
 
 				suicide.should.equal(expects.shift());
 
@@ -374,7 +374,7 @@ describe('utils', function(){
 				util = require('util'),
 				expects = _.map(_.range(0, 10), function(ith){return pid + ith * 2;});
 
-			emitter.on('disconnect', function(suicide){
+			emitter.on('dismiss', function(suicide){
 
 				suicide.should.equal(expects.shift());
 

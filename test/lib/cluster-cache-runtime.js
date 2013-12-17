@@ -5,22 +5,23 @@ var express = require('express');
 var app = express();
 
 function configureApp() {
+
     app.get('/set', function (req, res) {
-        var key = req.query.key;
-        var value = req.query.value;
+
+        var key = req.query.key,
+            value = req.query.value;
         if (!key || !value) {
             res.send('hello', 200);
-        }else {
-            var cache = require('../../lib/cache.js').use('cache-test');
-            cache.set(key, value).then(function (happens) {
-                if (happens) {
-                    res.send(value, 200);
-                }else {
-                    res.send('fail', 200);
-                }
-            }).otherwise(function (err) {
-                res.send(err, 404);
-            });
+        }
+        else {
+            
+            var cache = require('cluster-cache').use('cache-test');
+            cache.set(key, value).then(function(happens){    
+                    res.send(happens ? value : 'fail', 200);
+                },
+                function (err) {
+                    res.send(err, 404);
+                });
         }
     });
 
@@ -28,15 +29,19 @@ function configureApp() {
         var key = req.query.key;
         if (!key) {
             res.send('hello', 200);
-        }else {
-            var cache = require('../../lib/cache.js').use('cache-test');
-            cache.get(key, function () {
+        }
+        else {
+
+            var cache = require('cluster-cache').use('cache-test');
+            cache.get(key, function (){
                 return 'cache-test';
-            }).then(function (value) {
-                res.send(value, 200);
-            }).otherwise(function (err) {
-                res.send(err, 404);
-            });
+            })
+            .then(function (value){
+                    res.send(value, 200);
+                },
+                function (err){
+                    res.send(err, 404);
+                });
         }
     });
 
@@ -62,10 +67,10 @@ listen({
     },
     'monCreateServer': require('http').createServer,
     'monPort': parseInt(process.env.monPort) || 9091
-}).then(function (resolved) {
-    process.send({
-        ready: true, 
+})
+.then(function (resolved) {
+        process.send({'ready': true});
+    },
+    function (err) {
+        process.send({'err': err});
     });
-}).otherwise(function (err) {
-    process.send({err: err});
-});
