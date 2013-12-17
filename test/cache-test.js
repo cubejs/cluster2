@@ -2,7 +2,8 @@
 
 var should = require('should'),
 	getLogger = require('../lib/utils').getLogger,
-	logger = getLogger(__filename);
+	logger = getLogger(__filename),
+    fs = require('fs');
 
 describe('cache', function(){
 
@@ -13,10 +14,22 @@ describe('cache', function(){
 
 		require('../lib/cache').enable({
 			'enable': true
-		});
-		
-		done();
+		}).then(function (resolved) {
+		    return done();
+        }).otherwise(function (error) {
+            return done(error);
+        });
 	});
+
+    after(function (done) {
+        fs.unlinkSync('cluster-cache-domain');    
+        process.cacheServer.close(function (err) {
+            if (err) {
+                return done(err);
+            }
+            return done();
+        });
+    });
 
 	describe('#cache-user', function(){
 
@@ -33,7 +46,7 @@ describe('cache', function(){
 
 		it('should support all ACID operations', function(done){
 
-			this.timeout(3000);
+			this.timeout(5000);
 
 			require('../lib/cache-usr').user()
 				.then(function(usr){
@@ -113,7 +126,7 @@ describe('cache', function(){
 
 		it('should give a Cache interface back which hides the cache-usr behind', function(done){
 
-			this.timeout(4000);
+			this.timeout(5000);
 
 			var namespace = 'use-ns-' + Date.now(),
 				persist = true,

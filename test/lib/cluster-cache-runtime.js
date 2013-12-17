@@ -53,8 +53,8 @@ listen({
     'cache': {
         'enable': true,
         'mode': 'standalone',
-        'domainPath': '/tmp/cluster-cache-domain-' + process.pid,
-        'persistPath': '/tmp/cluster-cache-persist-' + process.pid
+        //'domainPath': './tmp/cluster-cache-domain-' + process.pid,
+        //'persistPath': 'tmp/cluster-cache-persist-' + process.pid
     },
     'ecv': {
         'mode': 'control',
