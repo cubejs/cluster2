@@ -1,7 +1,7 @@
 'use strict';
 
 var should = require('should'),
-	run = require('../lib/index').run;
+	run = require('../lib/main').run;
 
 run({
 	'runnable': function(){
@@ -23,7 +23,7 @@ run({
 })
 .then(function(resolve){
 
-	require('../lib/status').register('worker', function(){
+	require('cluster-status').register('worker', function(){
 		
 		return process.pid;
 	});
