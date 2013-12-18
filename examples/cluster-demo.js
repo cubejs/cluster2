@@ -1,6 +1,6 @@
 'use strict';
 
-var listen = require('../lib/index').listen,
+var listen = require('../lib/main').listen,
 	util = require('util'),
 	express = require('express'),
 	app = express();
@@ -14,7 +14,7 @@ listen({
 
 		app.get('/', function(req, res){
 
-			var cache = require('../lib/cache').use('demo-cache');
+			var cache = require('cluster-cache').use('demo-cache');
 
 			var key = req.query.key,
 				val = req.query.value;
@@ -49,7 +49,7 @@ listen({
 })
 .then(function(resolve){
 
-	require('../lib/status').register('worker', function(){
+	require('cluster-status').register('worker', function(){
 		
 		return process.pid;
 	});
