@@ -10,8 +10,7 @@ target
 docs
 logs
 log
-cluster-cache-domain
-cluster-cache-persist
+cluster-cache-*
 ports
 /coverage/
 /lib-cov/
