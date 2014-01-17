@@ -22,8 +22,9 @@
     "ejs": "~0.8.4",
     "npm": "~1.3.0",
     "when": "~2.4.0",
-    "memwatch": "~0.2.2",
-    "usage": "~0.3.8"
+    "usage": "~0.3.8",
+    "bignumber.js": "~1.1.1",
+    "gc-stats": "~0.0.1"
   },
   "devDependencies": {
     "websocket": "~1.0.8",
