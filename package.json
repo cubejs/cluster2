@@ -7,7 +7,7 @@
     }
   ],
   "name": "cluster2",
-  "version": "0.4.25",
+  "version": "0.4.24",
   "repository": {
     "type": "git",
     "url": "https://github.com/cubejs/cluster2"
