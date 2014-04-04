@@ -261,54 +261,54 @@ module.exports = {
         emitter.emit('starting');
     },
 
-    'start, graceful shutdown': function (test) {
-        var emitter = new EventEmitter(), child = start(emitter);
+    // 'start, graceful shutdown': function (test) {
+    //     var emitter = new EventEmitter(), child = start(emitter);
 
-        emitter.on('starting', function () {
-            waitForStart(child, emitter, test, 0, 100);
-        });
+    //     emitter.on('starting', function () {
+    //         waitForStart(child, emitter, test, 0, 100);
+    //     });
 
-        var respCount = 0;
+    //     var respCount = 0;
 
-        emitter.on('started', function () {
-            for(var i = 0; i < 2000; i++) {
-                request(util.format('http://localhost:%d', port), function (error, response, body) {
-                    if(error) {
-                        test.ok(false, 'got error from server')
-                    }
-                    else {
-                        respCount++;
-                    }
-                });
-            }
-            // Send shutdown while requests are in-flight
-            setTimeout(function() {
-                shutdown(emitter);
-            }, 10);
-        });
+    //     emitter.on('started', function () {
+    //         for(var i = 0; i < 2000; i++) {
+    //             request(util.format('http://localhost:%d', port), function (error, response, body) {
+    //                 if(error) {
+    //                     test.ok(false, 'got error from server')
+    //                 }
+    //                 else {
+    //                     respCount++;
+    //                 }
+    //             });
+    //         }
+    //         // Send shutdown while requests are in-flight
+    //         setTimeout(function() {
+    //             shutdown(emitter);
+    //         }, 10);
+    //     });
 
-        emitter.on('start failure', function (error) {
-            log('Failed to start ', error.stack || error);
-            test.ok(false, 'failed to start')
-        });
+    //     emitter.on('start failure', function (error) {
+    //         log('Failed to start ', error.stack || error);
+    //         test.ok(false, 'failed to start')
+    //     });
 
-        emitter.on('stopping', function () {
-            waitForStop.apply(null, [emitter, test, 0, 100])
-        });
+    //     emitter.on('stopping', function () {
+    //         waitForStop.apply(null, [emitter, test, 0, 100])
+    //     });
 
-        emitter.on('stopped', function () {
-            // Ensure that all in-flight requests are handled
-            test.equals(respCount, 2000);
-            log('Stopped');
-            // Assert that there are 0 pids.
-            fs.readdir('./pids', function (err, paths) {
-                test.equal(paths.length, 0);
-            });
-            test.done();
-        });
+    //     emitter.on('stopped', function () {
+    //         // Ensure that all in-flight requests are handled
+    //         test.equals(respCount, 2000);
+    //         log('Stopped');
+    //         // Assert that there are 0 pids.
+    //         fs.readdir('./pids', function (err, paths) {
+    //             test.equal(paths.length, 0);
+    //         });
+    //         test.done();
+    //     });
 
-        emitter.emit('starting');
-    },
+    //     emitter.emit('starting');
+    // },
 
     'start, check recycle on threshold, shutdown': function (test) {
         var emitter = new EventEmitter(), child = start(emitter);
