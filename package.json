@@ -43,11 +43,13 @@
         "dustjs-linkedin": "~2.0.3"
     },
     "scripts": {
-        "prestart": "rm -rf ./log ./cluster-cache-*; mkdir log; rm -rf ./pids; mkdir pids",
+        "clean": "rm -rf ./log ./cluster-cache-* ./pids; mkdir log pids;",
+        "prestart": "npm run-script clean",
         "start": "node ./examples/cluster-demo.js --port=9090 --monPort=9091 --noWorkers=2 --cache.enable --heartbeat.interval=5000 &",
         "stop": "node shutdown.js",
-        "pretest": "rm -rf ./log ./cluster-cache-*; mkdir log; rm -rf ./pids; mkdir pids",
-        "test": "mocha --ui bdd --timeout 10s --reporter spec  ./test/*-test.js"
+        "pretest": "npm run-script clean",
+        "test": "mocha --ui bdd --timeout 10s --reporter spec  ./test/*-test.js",
+        "posttest": "npm run-script clean"
     },
     "publishConfig": {
         "registry": "https://registry.npmjs.org"

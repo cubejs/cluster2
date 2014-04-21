@@ -4,9 +4,9 @@ var listen = require('../lib/main').listen,
 	util = require('util'),
 	path = require('path'),
 	express = require('express'),
-	store = new express.session.MemoryStore, 
+	store = new express.session.MemoryStore,
 	app = express(),
-	dust = require('dustjs-linkedin'), 
+	dust = require('dustjs-linkedin'),
 	cons = require('consolidate'),
 	routes = require('./routes');
 
@@ -31,9 +31,9 @@ listen({
 			app.use(express.bodyParser());
 			app.use(express.methodOverride());
 			app.use(express.cookieParser('wigglybits'));
-			app.use(express.session({ 
-				'secret': 'whatever', 
-				'store': store 
+			app.use(express.session({
+				'secret': 'whatever',
+				'store': store
 			}));
 			app.use(express.session());
 			app.use(app.router);
@@ -49,8 +49,8 @@ listen({
 				res.locals.message = req.flash();
 				res.locals.session = req.session;
 				res.locals.q = req.body;
-				res.locals.err = false; 
-				
+				res.locals.err = false;
+
 				next();
 			});
 		});
@@ -68,12 +68,12 @@ listen({
         //warmup is done at both the initialization, and when the worker is to be replaced.
         //the long run test verifies that with warmup, the 1st user request won't be slowed down even it's a new worker
         var tillWarmUp = require('when').defer();
-        
+
         request.get('http://localhost:' + address.port, function(err, response, body){
-					
+
                 tillWarmUp.resolve(app);
             });
-        
+
         return tillWarmUp.promise;
     },
 	'debug': {
@@ -87,7 +87,7 @@ listen({
 	'gc': {
 		'monitor': true
 	},
-	'maxAge': 60,//1 minute, just to see how the workers get killed!
+	'maxAge': 600,//10 minutes, just to see how the workers get killed!
 	'heartbeatInterval': 10000
 })
 .then(function(resolve){
@@ -106,7 +106,7 @@ listen({
 			_.each(_.range(0, 20), function(ith){
 
 				request.get('http://localhost:8080', function(err, response, body){
-					
+
 					if(err || response.statusCode !== 200){
 						console.log('[err:%j] response:%j and body:%s', err, response, body);
 					}
