@@ -1,46 +1,49 @@
 {
-    "author": "ql.io",
-    "contributors": [{
-        "name": "Subbu Allamaraju",
-        "email": "subbu@ebaysf.com"
-    }, 
+  "author": "ql.io",
+  "contributors": [
     {
-        "name": "Roy Zhou",
-        "email": "huzhou@ebay.com"
-    }],
-    "name": "cluster2",
-    "version": "0.4.25",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/cubejs/cluster2"
+      "name": "Subbu Allamaraju",
+      "email": "subbu@ebaysf.com"
     },
-    "engines": {
-        "node": ">= 0.8.0"
-    },
-    "main": "lib/index.js",
-    "dependencies": {
-        "underscore": "~1.4.4",
-        "express": "~2.5.11",
-        "ejs": "~0.8.4",
-        "npm": "~1.3.0",
-        "when": "~2.4.0",
-        "usage": "~0.3.8",
-        "bignumber.js": "~1.1.1",
-        "gc-stats": "~0.0.1"
-    },
-    "devDependencies": {
-        "websocket": "~1.0.8",
-        "nodeunit": "~0.8.0",
-        "request": "~2.21.0",
-        "mocha": "~1.11.0",
-        "should": "~1.2.2",
-        "harbor": "~0.2.0"
-    },
-    "scripts": {
-        "test": "nodeunit test"
-    },
-    "optionalDependencies": {},
-    "publishConfig": {
-        "registry": "https://registry.npmjs.org/"
+    {
+      "name": "Roy Zhou",
+      "email": "huzhou@ebay.com"
     }
+  ],
+  "name": "cluster2",
+  "version": "0.4.26",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cubejs/cluster2"
+  },
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "underscore": "~1.4.4",
+    "express": "~2.5.11",
+    "ejs": "~0.8.4",
+    "npm": "~1.3.0",
+    "when": "~2.4.0",
+    "usage": "~0.3.8",
+    "bignumber.js": "~1.1.1",
+    "gc-stats": "~0.0.1"
+  },
+  "devDependencies": {
+    "websocket": "~1.0.8",
+    "nodeunit": "~0.8.0",
+    "request": "~2.21.0",
+    "mocha": "~1.11.0",
+    "should": "~1.2.2",
+    "harbor": "~0.2.0"
+  },
+  "scripts": {
+    "test": "nodeunit test"
+  },
+  "optionalDependencies": {},
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "ebay": {}
 }
