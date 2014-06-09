@@ -62,11 +62,11 @@ exports['Nanny Feature Test'] = {
         });
     },
 
-    /*'New worker created to replace the killed worker': function (test) {
+    'New worker created to replace the killed worker': function (test) {
         request.get('http://127.0.0.1:3001/ComponentStatus?component=worker', function (err, res, body) {
             var pids = body.substring(1, body.length - 1).split(',');
             test.strictEqual(pids.length, 3); // master & 2 workers
             test.done();
         });
-    }*/
+    }
 };
